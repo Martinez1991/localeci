@@ -52,10 +52,18 @@ export function buildTranslatePrompt(batch: TranslateBatch): BuiltPrompt {
     if (it.context) obj.context = it.context;
     if (it.neighbors && it.neighbors.length) obj.neighbors = it.neighbors;
     if (it.isIcu) obj.icu = true;
+    if (it.examples && it.examples.length) obj.approvedExamples = it.examples;
     return obj;
   });
 
-  const user = `Strings to translate:\n${JSON.stringify(payload, null, 2)}`;
+  // Human-approved examples are the learning loop (spec §5.7): the model should
+  // match the reviewer's prior corrections for similar strings.
+  const hasExamples = batch.items.some((it) => it.examples && it.examples.length);
+  const guidance = hasExamples
+    ? `\n\nSome items include "approvedExamples": human-approved (source→target) pairs from the same area. Match their terminology and register closely.`
+    : "";
+
+  const user = `Strings to translate:${guidance}\n${JSON.stringify(payload, null, 2)}`;
   return { system, user };
 }
 

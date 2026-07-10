@@ -41,6 +41,7 @@ export interface TranslateReport {
   byLocale: Map<string, { translated: number; flagged: number; failed: number; scoreSum: number; scored: number }>;
   tokensIn: number;
   tokensOut: number;
+  costUsd: number;
   hasFailures: boolean;
   changedFiles: string[];
 }
@@ -55,10 +56,11 @@ export interface RunOptions {
   targets: string[];
   codeContext?: Map<string, string>;
   write: boolean;
+  paranoid?: boolean;
 }
 
 export async function translateProject(opts: RunOptions): Promise<TranslateReport> {
-  const { cwd, config, glossary, provider, lock, today, targets, codeContext, write } = opts;
+  const { cwd, config, glossary, provider, lock, today, targets, codeContext, write, paranoid } = opts;
   const parser = getParser(config.source.format);
   const sourceFiles = await resolveSourceFiles(cwd, config.source.files);
 
@@ -67,6 +69,7 @@ export async function translateProject(opts: RunOptions): Promise<TranslateRepor
     byLocale: new Map(),
     tokensIn: 0,
     tokensOut: 0,
+    costUsd: 0,
     hasFailures: false,
     changedFiles: [],
   };
@@ -77,7 +80,7 @@ export async function translateProject(opts: RunOptions): Promise<TranslateRepor
     if (source.length === 0) continue;
 
     for (const locale of targets) {
-      const targetPath = deriveTargetPath(file, config.source.locale, locale);
+      const targetPath = deriveTargetPath(file, config.source.locale, locale, config.source.format);
       const targetRaw = readFileIfExists(cwd, targetPath);
       const target = targetRaw ? parser.parse(targetRaw) : [];
       const resolvedGlossary = resolveGlossaryForLocale(glossary, locale);
@@ -93,10 +96,12 @@ export async function translateProject(opts: RunOptions): Promise<TranslateRepor
         glossary: resolvedGlossary,
         ...(codeContext ? { codeContext } : {}),
         today,
+        ...(paranoid !== undefined ? { paranoid } : {}),
       });
 
       report.tokensIn += res.tokensIn;
       report.tokensOut += res.tokensOut;
+      report.costUsd += res.costUsd;
       if (res.hasFailures) report.hasFailures = true;
 
       // Did the serialized output change?
@@ -173,7 +178,7 @@ export async function checkProject(opts: CheckOptions): Promise<CheckReport> {
     const sourceMap = new Map(source.map((e) => [e.key, e]));
 
     for (const locale of targets) {
-      const targetPath = deriveTargetPath(file, config.source.locale, locale);
+      const targetPath = deriveTargetPath(file, config.source.locale, locale, config.source.format);
       const targetRaw = readFileIfExists(cwd, targetPath);
       const target: FlatEntry[] = targetRaw ? parser.parse(targetRaw) : [];
       const targetMap = new Map(target.map((e) => [e.key, e]));

@@ -16,6 +16,8 @@ export interface TranslateItem {
   neighbors?: string[];
   /** ICU source flag — providers must translate branch-by-branch. */
   isIcu?: boolean;
+  /** Human-approved (source→target) few-shot examples from the same namespace (spec §5.7). */
+  examples?: Array<{ source: string; target: string }>;
 }
 
 export interface TranslateBatch {

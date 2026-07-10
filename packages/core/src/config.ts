@@ -4,7 +4,16 @@
  */
 import { z } from "zod";
 
-export const FormatSchema = z.enum(["i18next", "next-intl", "json", "yaml", "po"]);
+export const FormatSchema = z.enum([
+  "i18next",
+  "next-intl",
+  "json",
+  "yaml",
+  "po",
+  "strings",
+  "android",
+  "fluent",
+]);
 
 export const SourceSchema = z.object({
   locale: z.string().min(1, "source.locale is required (e.g. \"en\")"),
@@ -31,6 +40,8 @@ export const ProviderConfigSchema = z.object({
 export const QualitySchema = z.object({
   threshold: z.number().int().min(0).max(100).default(85),
   onBelowThreshold: z.enum(["flag", "fail", "skip"]).default("flag"),
+  /** Back-translation cross-check (spec §5.6). Doubles cost; off by default. */
+  paranoid: z.boolean().default(false),
 });
 
 export const ContextConfigSchema = z.object({

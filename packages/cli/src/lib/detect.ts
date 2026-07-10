@@ -89,11 +89,11 @@ export async function detectProject(cwd: string): Promise<Detection | null> {
     layout = "dir";
     localeCandidates = localeSubdirs;
     // Format from a sample file.
-    const sample = (await glob(`${baseDir}/${localeSubdirs[0]}/**/*.{json,yaml,yml,po}`, { cwd, onlyFiles: true }))[0];
+    const sample = (await glob(`${baseDir}/${localeSubdirs[0]}/**/*.{json,yaml,yml,po,strings,xml,ftl}`, { cwd, onlyFiles: true }))[0];
     format = (sample && formatFromExtension(sample)) || "json";
   } else {
     layout = "file";
-    const files = entries.filter((e) => /\.(json|ya?ml|po)$/.test(e));
+    const files = entries.filter((e) => /\.(json|ya?ml|po|strings|xml|ftl)$/.test(e));
     localeCandidates = files.map((f) => f.replace(/\.(json|ya?ml|po)$/, "")).filter(isLocaleName);
     format = (files[0] && formatFromExtension(files[0])) || "json";
     if (localeCandidates.length === 0) return null;
@@ -143,5 +143,8 @@ export async function detectProject(cwd: string): Promise<Detection | null> {
 function extFor(format: FormatId): string {
   if (format === "yaml") return "yml";
   if (format === "po") return "po";
+  if (format === "strings") return "strings";
+  if (format === "android") return "xml";
+  if (format === "fluent") return "ftl";
   return "json";
 }

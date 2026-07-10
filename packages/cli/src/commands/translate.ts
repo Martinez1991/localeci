@@ -10,8 +10,16 @@ export interface TranslateOptions {
   cwd: string;
   to?: string[]; // subset of target locales
   mock?: boolean;
+  paranoid?: boolean;
+  json?: boolean;
   today: string;
   env: Record<string, string | undefined>;
+}
+
+function fmtUsd(usd: number): string {
+  if (usd === 0) return "$0";
+  if (usd < 0.01) return "<$0.01";
+  return `$${usd.toFixed(2)}`;
 }
 
 export async function cmdTranslate(opts: TranslateOptions): Promise<number> {
@@ -38,14 +46,16 @@ export async function cmdTranslate(opts: TranslateOptions): Promise<number> {
     throw e;
   }
 
+  const quiet = opts.json === true;
+
   let codeContext: Map<string, string> | undefined;
   if (config.context.scanCode && config.context.include.length) {
-    log.step("Scanning code for string context…");
+    if (!quiet) log.step("Scanning code for string context…");
     codeContext = await scanCodeContext({ cwd, include: config.context.include });
-    log.dim(`  found context for ${codeContext.size} keys`);
+    if (!quiet) log.dim(`  found context for ${codeContext.size} keys`);
   }
 
-  log.step(`Translating to ${c.bold(targets.join(", "))} via ${c.bold(provider.name)}…`);
+  if (!quiet) log.step(`Translating to ${c.bold(targets.join(", "))} via ${c.bold(provider.name)}…`);
 
   const report = await translateProject({
     cwd,
@@ -56,10 +66,41 @@ export async function cmdTranslate(opts: TranslateOptions): Promise<number> {
     today: opts.today,
     targets,
     ...(codeContext ? { codeContext } : {}),
+    ...(opts.paranoid ? { paranoid: true } : {}),
     write: true,
   });
 
   saveLock(cwd, lock.serialize());
+
+  // JSON output for programmatic use.
+  if (quiet) {
+    const out = {
+      provider: provider.name,
+      locales: Object.fromEntries(
+        [...report.byLocale.entries()].map(([locale, a]) => [
+          locale,
+          {
+            translated: a.translated,
+            flagged: a.flagged,
+            failed: a.failed,
+            avgScore: a.scored ? Math.round(a.scoreSum / a.scored) : null,
+          },
+        ]),
+      ),
+      changedFiles: report.changedFiles,
+      tokensIn: report.tokensIn,
+      tokensOut: report.tokensOut,
+      estCostUsd: Number(report.costUsd.toFixed(4)),
+      flagged: report.perFile.flatMap((f) =>
+        f.results
+          .filter((r) => r.decision === "flagged" || r.decision === "failed")
+          .map((r) => ({ locale: r.locale, key: r.key, score: r.score, decision: r.decision, issue: r.issues[0] ?? null })),
+      ),
+      hasFailures: report.hasFailures,
+    };
+    process.stdout.write(JSON.stringify(out, null, 2) + "\n");
+    return report.hasFailures ? 1 : 0;
+  }
 
   // Report.
   const rows = [...report.byLocale.entries()].map(([locale, a]) => [
@@ -86,7 +127,9 @@ export async function cmdTranslate(opts: TranslateOptions): Promise<number> {
   }
 
   if (report.changedFiles.length) {
-    log.success(`Updated ${report.changedFiles.length} file(s). Tokens: ${report.tokensIn} in / ${report.tokensOut} out.`);
+    log.success(
+      `Updated ${report.changedFiles.length} file(s). Tokens: ${report.tokensIn} in / ${report.tokensOut} out · est. cost ${fmtUsd(report.costUsd)}.`,
+    );
   } else {
     log.success(`Everything up to date — nothing to translate. (0 tokens, $0)`);
   }

@@ -11,6 +11,7 @@ import {
   parseGlossary,
   type Config,
   type Glossary,
+  type FormatId,
   ConfigError,
 } from "@localeci/core";
 
@@ -68,13 +69,42 @@ export async function resolveSourceFiles(cwd: string, pattern: string): Promise<
   return files.sort();
 }
 
+/** Convert a BCP-47 locale to Android's resource qualifier (pt-BR → pt-rBR). */
+function androidQualifier(locale: string): string {
+  const [lang, region] = locale.split(/[-_]/);
+  return region ? `${lang}-r${region.toUpperCase()}` : lang!;
+}
+
 /**
  * Map a source file path to its target-locale counterpart by substituting the
- * locale token. Handles both directory-style (locales/en/x.json) and
- * filename-style (locales/en.json) layouts.
+ * locale token. Handles directory-style (locales/en/x.json), filename-style
+ * (locales/en.json), Android (res/values/ → res/values-pt-rBR/), and iOS
+ * (en.lproj/ → pt-BR.lproj/) layouts.
  */
-export function deriveTargetPath(sourcePath: string, sourceLocale: string, targetLocale: string): string {
+export function deriveTargetPath(
+  sourcePath: string,
+  sourceLocale: string,
+  targetLocale: string,
+  format?: FormatId,
+): string {
   const norm = sourcePath.replace(/\\/g, "/");
+
+  // Android: res/values/ or res/values-en/ → res/values-<qualifier>/
+  if (format === "android") {
+    const q = androidQualifier(targetLocale);
+    const srcQ = androidQualifier(sourceLocale);
+    if (new RegExp(`(^|/)values-${escapeRe(srcQ)}(/)`).test(norm)) {
+      return norm.replace(new RegExp(`(^|/)values-${escapeRe(srcQ)}(/)`), `$1values-${q}$2`);
+    }
+    if (/(^|\/)values(\/)/.test(norm)) {
+      return norm.replace(/(^|\/)values(\/)/, `$1values-${q}$2`);
+    }
+  }
+
+  // iOS: en.lproj/ → pt-BR.lproj/
+  const lprojRe = new RegExp(`(^|/)${escapeRe(sourceLocale)}\\.lproj(/)`);
+  if (lprojRe.test(norm)) return norm.replace(lprojRe, `$1${targetLocale}.lproj$2`);
+
   // Directory segment: /en/ → /pt-BR/
   const dirRe = new RegExp(`(^|/)${escapeRe(sourceLocale)}(/)`);
   if (dirRe.test(norm)) return norm.replace(dirRe, `$1${targetLocale}$2`);

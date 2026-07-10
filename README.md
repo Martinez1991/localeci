@@ -78,6 +78,9 @@ The honest answer to "can you trust AI translation?" is: **sometimes, and you sh
 | JSON (nested) | i18next, next-intl | key order, indentation & new-only diffs preserved |
 | YAML | generic | comments preserved; anchors/aliases unsupported (clear error) |
 | gettext PO | generic | `msgctxt`, plurals (via ICU round-trip), comments, fuzzy |
+| iOS `.strings` | Apple | comments preserved; `en.lproj/` → `<locale>.lproj/` |
+| Android `strings.xml` | Android | `<string>`, `<plurals>` (via ICU), `translatable="false"`/arrays passthrough; `values/` → `values-pt-rBR/` |
+| Fluent `.ftl` | Project Fluent | simple messages translated; selectors/attributes preserved verbatim |
 
 ICU MessageFormat is translated **branch-by-branch** and recomposed, with CLDR plural categories enforced per target language (Polish needs `few`, Japanese only `other`).
 
@@ -98,7 +101,9 @@ ICU MessageFormat is translated **branch-by-branch** and recomposed, with CLDR p
 }
 ```
 
-Commands: `init` · `translate [--to de,ja] [--mock]` · `check` (CI: exits non-zero on missing/broken/low-score) · `status`.
+Commands: `init` · `translate [--to de,ja] [--mock] [--paranoid] [--json]` · `check [--json]` (CI: exits non-zero on missing/broken/low-score) · `status`.
+
+`--paranoid` back-translates each string and cross-checks similarity to the source (spec §5.6). `--json` emits a machine-readable report with per-locale scores, flagged strings, tokens, and estimated cost. Human edits to translations in a PR are detected and re-locked as `approvedBy: human`, then reused as few-shot examples for similar strings (spec §5.7).
 
 ## Bring your own key, or use the cloud
 
@@ -108,7 +113,7 @@ The CLI is open source and runs anywhere — your machine, your CI — with your
 
 ## Current limitations
 
-- Best supported: JSON (i18next, next-intl), YAML, gettext PO. More formats coming — PRs welcome.
+- Best supported: JSON (i18next, next-intl), YAML, gettext PO. iOS `.strings`, Android `strings.xml`, and Fluent `.ftl` are supported (Fluent selectors pass through untranslated). More formats coming — PRs welcome.
 - Optimized for the ~15 high-resource languages. Low-resource languages get lower scores *by design* (that's the point of scoring).
 - Visual UI preview is cloud-only and planned.
 
