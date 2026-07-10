@@ -1,0 +1,290 @@
+openapi: 3.1.0
+info:
+  title: LocaleCI Cloud API
+  version: "1.0.0"
+  description: >
+    Metered translation proxy, review, org/RBAC, MFA, privacy (LGPD), and
+    playground endpoints. Deny-by-default authorization; per-route rate limits;
+    zero-retention by default. See docs/PROJECT-DOCUMENTATION.md.
+  license:
+    name: FSL-1.1-Apache-2.0
+servers:
+  - url: https://localeci.dev
+    description: Production
+tags:
+  - name: Translation
+  - name: Keys
+  - name: Reviews
+  - name: Organizations
+  - name: MFA
+  - name: Privacy
+  - name: Playground
+  - name: Ops
+
+components:
+  securitySchemes:
+    ApiKey:
+      type: http
+      scheme: bearer
+      description: "LocaleCI API key: lcx_live_…"
+    Session:
+      type: apiKey
+      in: cookie
+      name: authjs.session-token
+      description: Auth.js session (GitHub OAuth)
+    WorkerSecret:
+      type: http
+      scheme: bearer
+      description: Shared cron/worker secret
+  headers:
+    RetryAfter:
+      schema: { type: integer }
+      description: Seconds until the rate-limit window frees up
+    RateLimitRemaining:
+      schema: { type: integer }
+  responses:
+    Unauthorized: { description: Missing/invalid credentials }
+    Forbidden: { description: Not a member / insufficient role (BOLA-safe) }
+    RateLimited:
+      description: Rate limit exceeded
+      headers:
+        Retry-After: { $ref: '#/components/headers/RetryAfter' }
+    BudgetExceeded: { description: Plan quota or daily budget cap reached }
+  schemas:
+    TranslateItem:
+      type: object
+      required: [id, text]
+      properties:
+        id: { type: string }
+        text: { type: string }
+        context: { type: string }
+        neighbors: { type: array, items: { type: string } }
+        isIcu: { type: boolean }
+        examples:
+          type: array
+          items:
+            type: object
+            properties: { source: { type: string }, target: { type: string } }
+    TranslateBatch:
+      type: object
+      required: [sourceLocale, targetLocale, tier, items, style, glossary]
+      properties:
+        sourceLocale: { type: string, example: en }
+        targetLocale: { type: string, example: de }
+        tier: { type: string, enum: [cheap, top] }
+        modelOverride: { type: string, description: Fine-tuned model id }
+        items: { type: array, items: { $ref: '#/components/schemas/TranslateItem' } }
+        style:
+          type: object
+          properties: { tone: { type: string }, audience: { type: string }, notes: { type: string } }
+        glossary:
+          type: array
+          items:
+            type: object
+            properties:
+              term: { type: string }
+              target: { type: [string, "null"] }
+              neverTranslate: { type: boolean }
+    TranslateResult:
+      type: object
+      properties:
+        translations:
+          type: array
+          items:
+            type: object
+            properties: { id: { type: string }, text: { type: string } }
+        model: { type: string }
+        tokensIn: { type: integer }
+        tokensOut: { type: integer }
+    Error:
+      type: object
+      properties: { error: { type: string } }
+
+paths:
+  /api/v1/translate:
+    post:
+      tags: [Translation]
+      summary: Metered translation proxy
+      security: [{ ApiKey: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/TranslateBatch' }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TranslateResult' }
+        "401": { $ref: '#/components/responses/Unauthorized' }
+        "402": { $ref: '#/components/responses/BudgetExceeded' }
+        "429": { $ref: '#/components/responses/RateLimited' }
+        "502": { description: Upstream provider error }
+
+  /api/v1/judge:
+    post:
+      tags: [Translation]
+      summary: Quality judge (0–5 per dimension)
+      security: [{ ApiKey: [] }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object } } }
+      responses:
+        "200": { description: Scores }
+        "401": { $ref: '#/components/responses/Unauthorized' }
+        "429": { $ref: '#/components/responses/RateLimited' }
+
+  /api/v1/keys:
+    post:
+      tags: [Keys]
+      summary: Issue an API key (shown once)
+      security: [{ Session: [] }]
+      requestBody:
+        content: { application/json: { schema: { type: object, properties: { orgId: { type: string } } } } }
+      responses:
+        "200":
+          description: The full secret (once) + prefix
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: { apiKey: { type: string }, prefix: { type: string } }
+        "401": { $ref: '#/components/responses/Unauthorized' }
+        "403": { $ref: '#/components/responses/Forbidden' }
+
+  /api/v1/playground:
+    post:
+      tags: [Playground]
+      summary: Translate one string live (public, capped)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [source, targetLocale]
+              properties:
+                source: { type: string, maxLength: 500 }
+                sourceLocale: { type: string, default: en }
+                targetLocale: { type: string }
+      responses:
+        "200": { description: Translation + score }
+        "413": { description: Input too long }
+        "402": { $ref: '#/components/responses/BudgetExceeded' }
+        "429": { $ref: '#/components/responses/RateLimited' }
+
+  /api/v1/reviews/{id}:
+    post:
+      tags: [Reviews]
+      summary: Apply a review action (approve/edit/reject)
+      security: [{ Session: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - { type: object, properties: { type: { const: approve } } }
+                - { type: object, properties: { type: { const: edit }, text: { type: string } } }
+                - { type: object, properties: { type: { const: reject }, reason: { type: string } } }
+      responses:
+        "200": { description: New status + finalTarget }
+        "401": { $ref: '#/components/responses/Unauthorized' }
+        "403": { $ref: '#/components/responses/Forbidden' }
+        "404": { description: Not found }
+        "422": { description: Invalid edit (validator issues) }
+
+  /api/v1/orgs/{id}/members:
+    get:
+      tags: [Organizations]
+      summary: List members
+      security: [{ Session: [] }]
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses:
+        "200": { description: Members }
+        "403": { $ref: '#/components/responses/Forbidden' }
+    post:
+      tags: [Organizations]
+      summary: Invite a member (admin+)
+      security: [{ Session: [] }]
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties: { email: { type: string, format: email }, role: { type: string, enum: [owner, admin, member] } }
+      responses:
+        "200": { description: Invite created }
+        "400": { description: Missing email }
+        "403": { $ref: '#/components/responses/Forbidden' }
+
+  /api/v1/mfa:
+    post:
+      tags: [MFA]
+      summary: Enroll or verify TOTP (RFC 6238)
+      security: [{ Session: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [action]
+              properties: { action: { type: string, enum: [enroll, verify] }, code: { type: string } }
+      responses:
+        "200": { description: secret+otpauthUri (enroll) or enabled (verify) }
+        "400": { description: Enroll first / unknown action }
+        "401": { description: Invalid code }
+
+  /api/v1/privacy/export:
+    post:
+      tags: [Privacy]
+      summary: DSAR export of the user's data
+      security: [{ Session: [] }]
+      responses:
+        "200": { description: JSON bundle (attachment), api-key hashes excluded }
+        "401": { $ref: '#/components/responses/Unauthorized' }
+
+  /api/v1/privacy/delete:
+    post:
+      tags: [Privacy]
+      summary: Right to erasure (transfer/delete/scrub; audit retained)
+      security: [{ Session: [] }]
+      responses:
+        "200": { description: deleted + plan }
+        "401": { $ref: '#/components/responses/Unauthorized' }
+
+  /api/worker:
+    post:
+      tags: [Ops]
+      summary: Drain the job queue (cron)
+      security: [{ WorkerSecret: [] }]
+      responses:
+        "200": { description: processed/failed counts }
+        "401": { $ref: '#/components/responses/Unauthorized' }
+
+  /api/retention:
+    post:
+      tags: [Ops]
+      summary: Enforce data retention (cron)
+      security: [{ WorkerSecret: [] }]
+      responses:
+        "200": { description: deleted counts per category }
+        "401": { $ref: '#/components/responses/Unauthorized' }
+
+  /api/stripe/webhook:
+    post:
+      tags: [Ops]
+      summary: Stripe subscription sync (signature-verified)
+      responses:
+        "200": { description: received }
+        "400": { description: Invalid signature }
