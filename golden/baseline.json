@@ -1,11 +1,11 @@
 {
   "provider": "mock",
-  "total": 25,
+  "total": 75,
   "failures": 0,
   "failureRate": 0,
   "avgScore": 96,
   "exactMatchRate": 0,
-  "tokensIn": 186,
-  "tokensOut": 199,
+  "tokensIn": 468,
+  "tokensOut": 508,
   "estCostPer1kStringsUsd": 0
 }

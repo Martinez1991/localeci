@@ -1,0 +1,60 @@
+name: Quality regression
+
+on:
+  schedule:
+    - cron: "0 5 * * *" # nightly 05:00 UTC
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "golden/**"
+      - "packages/core/src/pipeline/**"
+      - "packages/core/src/validators/**"
+      - "packages/providers/src/**"
+
+permissions:
+  contents: read
+
+jobs:
+  # Always-on structural regression (mock provider, no key) — gates prompt/model
+  # /batching changes against the golden set's validator pass-rate + baseline.
+  structural:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm -r --filter '@localeci/core' --filter '@localeci/providers' build
+      - run: node golden/run.mjs
+        env:
+          LOCALECI_PROVIDER: mock
+
+  # Real-provider quality regression — only when a key is configured (nightly).
+  real-provider:
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'pull_request' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm -r --filter '@localeci/core' --filter '@localeci/providers' build
+      - name: Quality regression (Anthropic) — skipped if no secret
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          if [ -z "$ANTHROPIC_API_KEY" ]; then
+            echo "No ANTHROPIC_API_KEY secret configured — skipping real-provider regression."
+            exit 0
+          fi
+          LOCALECI_PROVIDER=anthropic node golden/run.mjs

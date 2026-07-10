@@ -36,6 +36,13 @@ LOCALECI_PROVIDER=anthropic ANTHROPIC_API_KEY=sk-... node golden/run.mjs --updat
 
 ## Growing to 300
 
-v1 ships ~25 hand-picked trap cases. Week 6 expands to 300 strings extracted
-from real open-source projects across 5+ languages, keeping the trap-tag
-coverage balanced.
+v2 ships **75** curated trap cases across 10 languages (de, pt-BR, es, fr, pl,
+ru, ar, ja, zh, ko). `node golden/run.mjs` prints coverage by trap category and
+by locale so gaps toward the 300-case target are visible each run. References are
+curated for structural validity (every one passes all deterministic validators);
+translation correctness is reviewed over time.
+
+The nightly `quality-regression` workflow runs the **structural** job on every
+relevant PR (mock, free) and the **real-provider** job on a schedule when
+`ANTHROPIC_API_KEY` is configured — comparing scores/exact-match against these
+references and failing on regression vs `baseline.json`.
