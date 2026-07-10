@@ -27,6 +27,7 @@ function makeReport(): TranslateReport {
     byLocale,
     tokensIn: 500,
     tokensOut: 480,
+    costUsd: 0.0032,
     hasFailures: false,
     changedFiles: ["messages/pt-BR.json", "messages/ja.json"],
   };

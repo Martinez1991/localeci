@@ -1,6 +1,6 @@
 {
   "name": "localeci",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Ship your app in 30 languages, without leaving Git. LLM i18n translation with a per-string quality score.",
   "license": "FSL-1.1-Apache-2.0",
   "type": "module",
@@ -16,11 +16,31 @@
       "import": "./dist/index.js"
     }
   },
-  "files": ["dist"],
-  "keywords": ["i18n", "l10n", "translation", "localization", "cli", "github-action", "llm", "i18next", "next-intl", "gettext"],
-  "repository": { "type": "git", "url": "git+https://github.com/localeci/localeci.git", "directory": "packages/cli" },
+  "files": [
+    "dist"
+  ],
+  "keywords": [
+    "i18n",
+    "l10n",
+    "translation",
+    "localization",
+    "cli",
+    "github-action",
+    "llm",
+    "i18next",
+    "next-intl",
+    "gettext"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/localeci/localeci.git",
+    "directory": "packages/cli"
+  },
   "homepage": "https://localeci.dev",
-  "publishConfig": { "access": "public", "provenance": true },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",

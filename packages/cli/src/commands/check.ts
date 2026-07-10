@@ -9,6 +9,7 @@ export interface CheckOptions {
   to?: string[];
   /** Treat missing/stale as failures too (default true). */
   strict?: boolean;
+  json?: boolean;
 }
 
 export async function cmdCheck(opts: CheckOptions): Promise<number> {
@@ -19,6 +20,20 @@ export async function cmdCheck(opts: CheckOptions): Promise<number> {
   const targets = opts.to && opts.to.length ? config.targets.filter((t) => opts.to!.includes(t)) : config.targets;
 
   const report = await checkProject({ cwd, config, glossary, lock, targets });
+
+  const failStrict = opts.strict !== false;
+  if (opts.json) {
+    const fail =
+      report.issues.some((i) => i.kind === "broken" || i.kind === "below-threshold") ||
+      (failStrict && report.issues.some((i) => i.kind === "missing"));
+    const out = {
+      ok: !fail,
+      coverage: report.coverage.map((c) => ({ locale: c.locale, percent: c.percent, missing: c.missing, stale: c.stale })),
+      issues: report.issues,
+    };
+    process.stdout.write(JSON.stringify(out, null, 2) + "\n");
+    return fail ? 1 : 0;
+  }
 
   const rows = report.coverage.map((c) => [c.locale, `${c.percent}%`, String(c.translated), String(c.missing), String(c.stale)]);
   log.info(table(["Locale", "Coverage", "Done", "Missing", "Stale"], rows));

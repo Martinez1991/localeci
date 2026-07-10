@@ -35,6 +35,13 @@ describe("deriveTargetPath", () => {
   it("maps filename-style layouts", () => {
     expect(deriveTargetPath("messages/en.json", "en", "de")).toBe("messages/de.json");
   });
+  it("maps Android values/ to values-<qualifier>/", () => {
+    expect(deriveTargetPath("res/values/strings.xml", "en", "pt-BR", "android")).toBe("res/values-pt-rBR/strings.xml");
+    expect(deriveTargetPath("res/values/strings.xml", "en", "de", "android")).toBe("res/values-de/strings.xml");
+  });
+  it("maps iOS .lproj layouts", () => {
+    expect(deriveTargetPath("en.lproj/Localizable.strings", "en", "pt-BR", "strings")).toBe("pt-BR.lproj/Localizable.strings");
+  });
 });
 
 describe("detect + init + translate + check (mock)", () => {

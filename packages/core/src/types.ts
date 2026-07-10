@@ -9,7 +9,15 @@
 export type Locale = string;
 
 /** Format identifiers understood by the parser registry. */
-export type FormatId = "i18next" | "next-intl" | "json" | "yaml" | "po";
+export type FormatId =
+  | "i18next"
+  | "next-intl"
+  | "json"
+  | "yaml"
+  | "po"
+  | "strings" // iOS Localizable.strings
+  | "android" // Android strings.xml
+  | "fluent"; // Project Fluent (.ftl)
 
 /**
  * Per-entry metadata a parser can attach and a serializer must be able to

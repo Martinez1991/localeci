@@ -23,17 +23,25 @@ export interface DecideParams {
   judge?: JudgeScore;
   threshold: number;
   onBelowThreshold: "flag" | "fail" | "skip";
+  /** Back-translation similarity 0..1 (spec §5.6, --paranoid). Undefined = not run. */
+  backSimilarity?: number;
 }
 
 export function decide(params: DecideParams): ScoreDecision {
-  const { validation, judge, threshold, onBelowThreshold } = params;
+  const { validation, judge, threshold, onBelowThreshold, backSimilarity } = params;
 
   if (!validation.ok) {
     // Deterministic failure → score 0, never written.
     return { score: 0, decision: "failed", write: false, fail: true };
   }
 
-  const score = judge ? judgeToScore(judge) : 100;
+  const baseScore = judge ? judgeToScore(judge) : 100;
+  // Fold in back-translation: a faithful round-trip barely moves the score; a
+  // divergent one pulls it down (weight 0.35 on the similarity signal).
+  const score =
+    backSimilarity === undefined
+      ? baseScore
+      : Math.round(baseScore * (0.65 + 0.35 * clamp01(backSimilarity)));
 
   if (score >= threshold) {
     return { score, decision: "written", write: true, fail: false };
@@ -47,4 +55,8 @@ export function decide(params: DecideParams): ScoreDecision {
     case "skip":
       return { score, decision: "skipped", write: false, fail: false };
   }
+}
+
+function clamp01(n: number): number {
+  return Math.max(0, Math.min(1, n));
 }

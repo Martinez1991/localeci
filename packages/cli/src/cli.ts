@@ -7,7 +7,7 @@ import { cmdStatus } from "./commands/status.js";
 import { log, c } from "./lib/output.js";
 import { ConfigError } from "@localeci/core";
 
-const VERSION = "0.1.0";
+const VERSION = "0.2.0";
 
 const HELP = `${c.bold("localeci")} — ship your app in 30 languages, without leaving Git.
 
@@ -23,6 +23,8 @@ ${c.bold("Commands")}
 ${c.bold("Options")}
   --to <locales>       Comma-separated subset of target locales (translate/check)
   --mock               Use the deterministic mock provider (no API key)
+  --paranoid           translate: back-translate and cross-check each string (2x cost)
+  --json               translate/check: machine-readable JSON output
   --no-strict          check: don't fail on missing strings (only on broken/low-score)
   --force              init: overwrite an existing config
   --cwd <dir>          Run in a different directory
@@ -51,6 +53,8 @@ export async function main(argv: string[]): Promise<number> {
     options: {
       to: { type: "string" },
       mock: { type: "boolean" },
+      paranoid: { type: "boolean" },
+      json: { type: "boolean" },
       strict: { type: "boolean", default: true },
       force: { type: "boolean" },
       cwd: { type: "string" },
@@ -77,9 +81,9 @@ export async function main(argv: string[]): Promise<number> {
       case "init":
         return await cmdInit({ cwd, force: values.force });
       case "translate":
-        return await cmdTranslate({ cwd, ...(to ? { to } : {}), mock: values.mock, today: today(), env: process.env });
+        return await cmdTranslate({ cwd, ...(to ? { to } : {}), mock: values.mock, paranoid: values.paranoid, json: values.json, today: today(), env: process.env });
       case "check":
-        return await cmdCheck({ cwd, ...(to ? { to } : {}), strict: values.strict });
+        return await cmdCheck({ cwd, ...(to ? { to } : {}), strict: values.strict, json: values.json });
       case "status":
         return await cmdStatus({ cwd });
       default:

@@ -57,7 +57,8 @@ export function buildTranslateComment(report: TranslateReport): string {
     details = `\n<details><summary>⚠ ${flagged.length} string${flagged.length === 1 ? "" : "s"} need review</summary>\n\n${lines}${more}\n</details>\n`;
   }
 
-  const tokens = `\n<sub>${report.tokensIn} tokens in · ${report.tokensOut} out · ${report.changedFiles.length} file(s) changed</sub>`;
+  const cost = report.costUsd === 0 ? "$0" : report.costUsd < 0.01 ? "<$0.01" : `$${report.costUsd.toFixed(2)}`;
+  const tokens = `\n<sub>${report.tokensIn} tokens in · ${report.tokensOut} out · est. ${cost} · ${report.changedFiles.length} file(s) changed</sub>`;
 
   return [
     COMMENT_MARKER,

@@ -9,6 +9,7 @@ export * from "./lockfile.js";
 export * from "./diff.js";
 export * from "./provider.js";
 export * from "./pipeline/index.js";
+export { estimateCost, rateForModel } from "./pricing.js";
 
 // Parsers
 export {
@@ -19,6 +20,9 @@ export {
   nextIntlParser,
   yamlParser,
   poParser,
+  stringsParser,
+  androidParser,
+  fluentParser,
   flatten,
   unflatten,
   splitKey,

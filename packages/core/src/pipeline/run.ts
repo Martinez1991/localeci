@@ -16,6 +16,8 @@ import { buildContext } from "./context.js";
 import { classifyTier } from "./routing.js";
 import { batchItems, withConcurrency } from "./batch.js";
 import { decide, type Decision } from "./score.js";
+import { tokenSimilarity } from "./similarity.js";
+import { estimateCost } from "../pricing.js";
 
 export interface PerStringResult {
   key: string;
@@ -39,6 +41,7 @@ export interface LocaleRunResult {
   avgScore: number;
   tokensIn: number;
   tokensOut: number;
+  costUsd: number;
   /** True if any string should fail CI. */
   hasFailures: boolean;
 }
@@ -54,6 +57,8 @@ export interface RunLocaleParams {
   glossary: ResolvedTerm[];
   codeContext?: Map<string, string>;
   today: string; // YYYY-MM-DD, injected for determinism
+  /** Override config.quality.paranoid (back-translation cross-check). */
+  paranoid?: boolean;
 }
 
 const CONCURRENCY = 4;
@@ -65,6 +70,27 @@ export async function runLocale(params: RunLocaleParams): Promise<LocaleRunResul
   const todo = needsTranslation(diff);
   const targetMap = new Map(target.map((e) => [e.key, e.value]));
   const sourceMap = new Map(source.map((e) => [e.key, e]));
+
+  // Human learning loop (spec §5.7): a locked string whose on-disk target no
+  // longer matches the lock (source unchanged) was edited by a human in review
+  // → re-lock as human-approved (immutable) and reuse as a few-shot example.
+  const humanExamplesByNs = new Map<string, Array<{ source: string; target: string }>>();
+  for (const s of source) {
+    const existing = lock.lookup({ sourceLocale, key: s.key, sourceText: s.value, targetLocale });
+    if (!existing) continue;
+    const onDisk = targetMap.get(s.key);
+    if (onDisk !== undefined && onDisk !== existing.target) {
+      const hash = lockHash({ sourceLocale, key: s.key, sourceText: s.value, targetLocale });
+      lock.set(hash, { ...existing, target: onDisk, approvedBy: "human", translatedAt: today });
+    }
+    const approved = lock.lookup({ sourceLocale, key: s.key, sourceText: s.value, targetLocale });
+    if (approved?.approvedBy === "human") {
+      const ns = namespaceOf(s.key);
+      const arr = humanExamplesByNs.get(ns) ?? [];
+      arr.push({ source: s.value, target: approved.target });
+      humanExamplesByNs.set(ns, arr);
+    }
+  }
 
   // Prepare translate items with context + tier.
   interface Prepared extends TranslateItem {
@@ -80,6 +106,10 @@ export async function runLocale(params: RunLocaleParams): Promise<LocaleRunResul
     if (ctx.summary) item.context = ctx.summary;
     if (ctx.neighbors.length) item.neighbors = ctx.neighbors;
     if (isIcu) item.isIcu = true;
+    const examples = (humanExamplesByNs.get(namespaceOf(d.key)) ?? [])
+      .filter((e) => e.source !== d.source)
+      .slice(0, 3);
+    if (examples.length) item.examples = examples;
     return item;
   });
 
@@ -89,6 +119,7 @@ export async function runLocale(params: RunLocaleParams): Promise<LocaleRunResul
   const translationMap = new Map<string, string>();
   let tokensIn = 0;
   let tokensOut = 0;
+  let costUsd = 0;
   const modelByKey = new Map<string, string>();
 
   await withConcurrency(batches, CONCURRENCY, async (batch) => {
@@ -98,18 +129,20 @@ export async function runLocale(params: RunLocaleParams): Promise<LocaleRunResul
         sourceLocale,
         targetLocale,
         tier,
-        items: batch.map(({ id, text, context, neighbors, isIcu }) => ({
+        items: batch.map(({ id, text, context, neighbors, isIcu, examples }) => ({
           id,
           text,
           ...(context ? { context } : {}),
           ...(neighbors ? { neighbors } : {}),
           ...(isIcu ? { isIcu } : {}),
+          ...(examples ? { examples } : {}),
         })),
         style: config.style,
         glossary: glossary.map((g) => ({ term: g.term, target: g.target, neverTranslate: g.neverTranslate })),
       });
       tokensIn += res.tokensIn;
       tokensOut += res.tokensOut;
+      costUsd += estimateCost({ model: res.model, tokensIn: res.tokensIn, tokensOut: res.tokensOut });
       for (const t of res.translations) {
         translationMap.set(t.id, t.text);
         modelByKey.set(t.id, res.model);
@@ -151,9 +184,44 @@ export async function runLocale(params: RunLocaleParams): Promise<LocaleRunResul
         const res = await provider.judge({ sourceLocale, targetLocale, items: chunk });
         tokensIn += res.tokensIn;
         tokensOut += res.tokensOut;
+        costUsd += estimateCost({ model: res.model, tokensIn: res.tokensIn, tokensOut: res.tokensOut });
         for (const s of res.scores) judgeScoreMap.set(s.id, s);
       } catch {
         // Judge failure → treat as unscored (score 100 fallback in decide()).
+      }
+    });
+  }
+
+  // Back-translation cross-check (spec §5.6, --paranoid): translate the
+  // candidate back to the source language and compare to the original source.
+  const paranoid = params.paranoid ?? config.quality.paranoid;
+  const backSimilarityMap = new Map<string, number>();
+  if (paranoid) {
+    const candidates = validated.filter((v) => v.validation.ok && v.target !== "");
+    const backChunks: Array<Array<{ id: string; text: string; source: string }>> = [];
+    for (let i = 0; i < candidates.length; i += config.batchSize) {
+      backChunks.push(candidates.slice(i, i + config.batchSize).map((v) => ({ id: v.key, text: v.target, source: v.source })));
+    }
+    await withConcurrency(backChunks, CONCURRENCY, async (chunk) => {
+      try {
+        const res = await provider.translate({
+          sourceLocale: targetLocale,
+          targetLocale: sourceLocale,
+          tier: "cheap",
+          items: chunk.map((c) => ({ id: c.id, text: c.text })),
+          style: config.style,
+          glossary: [],
+        });
+        tokensIn += res.tokensIn;
+        tokensOut += res.tokensOut;
+        costUsd += estimateCost({ model: res.model, tokensIn: res.tokensIn, tokensOut: res.tokensOut });
+        const backMap = new Map(res.translations.map((t) => [t.id, t.text]));
+        for (const c of chunk) {
+          const back = backMap.get(c.id);
+          if (back !== undefined) backSimilarityMap.set(c.id, tokenSimilarity(c.source, back));
+        }
+      } catch {
+        // Back-translation failure → leave similarity unset (no penalty).
       }
     });
   }
@@ -165,15 +233,20 @@ export async function runLocale(params: RunLocaleParams): Promise<LocaleRunResul
   for (const v of validated) {
     const prep = prepared.find((p) => p.id === v.key)!;
     const judge = judgeScoreMap.get(v.key);
+    const backSimilarity = backSimilarityMap.get(v.key);
     const d = decide({
       validation: v.validation,
       judge,
       threshold: config.quality.threshold,
       onBelowThreshold: config.quality.onBelowThreshold,
+      ...(backSimilarity !== undefined ? { backSimilarity } : {}),
     });
     const issues = [
       ...v.validation.issues.map((i) => i.message),
       ...(judge?.issues ?? []),
+      ...(backSimilarity !== undefined && backSimilarity < 0.5
+        ? [`back-translation diverged from source (similarity ${backSimilarity.toFixed(2)})`]
+        : []),
     ];
     results.push({
       key: v.key,
@@ -229,6 +302,12 @@ export async function runLocale(params: RunLocaleParams): Promise<LocaleRunResul
     avgScore,
     tokensIn,
     tokensOut,
+    costUsd,
     hasFailures: failed.length > 0,
   };
+}
+
+function namespaceOf(key: string): string {
+  const idx = key.lastIndexOf(".");
+  return idx === -1 ? "" : key.slice(0, idx);
 }
