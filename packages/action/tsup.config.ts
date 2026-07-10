@@ -7,6 +7,13 @@ export default defineConfig({
   // `require` so CJS deps (@actions/core) that call require('os') at runtime work.
   format: ["esm"],
   noExternal: [/.*/],
+  // `typescript` is an OPTIONAL runtime dep (the AST scanner dynamic-imports it,
+  // falling back to grep). Never bundle it — it would add ~10MB to the Action.
+  // Force it external at the esbuild level (noExternal otherwise re-bundles it).
+  external: ["typescript"],
+  esbuildOptions(options) {
+    options.external = [...(options.external ?? []), "typescript"];
+  },
   clean: true,
   sourcemap: false,
   target: "node20",

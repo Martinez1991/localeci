@@ -4,6 +4,7 @@
  * shared secret. Reference implementation.
  */
 import { NextRequest, NextResponse } from "next/server";
+import { timingSafeEqual } from "node:crypto";
 import { processJobs } from "../../../lib/queue.js";
 import { DbJobQueue } from "../../../server/dbQueue.js";
 import { handleTranslate, type ProxyDeps } from "../../../lib/proxy.js";
@@ -19,8 +20,16 @@ interface TranslateJob {
   batch: Parameters<typeof handleTranslate>[0];
 }
 
+function safeEqual(a: string, b: string): boolean {
+  const ab = Buffer.from(a);
+  const bb = Buffer.from(b);
+  return ab.length === bb.length && timingSafeEqual(ab, bb);
+}
+
 export async function POST(req: NextRequest): Promise<NextResponse> {
-  if (req.headers.get("authorization") !== `Bearer ${process.env.WORKER_SECRET}`) {
+  const expected = `Bearer ${process.env.WORKER_SECRET ?? ""}`;
+  const got = req.headers.get("authorization") ?? "";
+  if (!process.env.WORKER_SECRET || !safeEqual(got, expected)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

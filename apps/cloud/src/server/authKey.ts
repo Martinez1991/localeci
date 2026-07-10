@@ -20,7 +20,7 @@ export async function resolveOrg(secret: string): Promise<AuthedOrg | null> {
   const candidates = await db.select().from(schema.apiKeys).where(eq(schema.apiKeys.prefix, prefix));
   for (const key of candidates) {
     if (key.revokedAt) continue;
-    if (verifyKey(secret, key.hash)) {
+    if (await verifyKey(secret, key.hash)) {
       await db
         .update(schema.apiKeys)
         .set({ lastUsedAt: new Date() })

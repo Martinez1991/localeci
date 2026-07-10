@@ -24,6 +24,15 @@ jobs:
       - run: pnpm -r build
       - run: pnpm -r typecheck
       - run: pnpm -r test
+      # The Action ships its compiled bundle; fail if it's stale vs source.
+      - name: Verify action dist is up to date
+        run: |
+          pnpm --filter @localeci/action build
+          if ! git diff --quiet -- packages/action/dist; then
+            echo "::error::packages/action/dist is out of date. Run 'pnpm --filter @localeci/action build' and commit."
+            git --no-pager diff --stat -- packages/action/dist
+            exit 1
+          fi
 
   quality-regression:
     # The golden-set gate: any prompt/model/batching change must not regress.

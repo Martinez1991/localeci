@@ -7,16 +7,16 @@ import { createMockProvider } from "@localeci/providers";
 import type { TranslateBatch, JudgeBatch } from "@localeci/core";
 
 describe("apiKeys", () => {
-  it("generates a prefixed key and verifies its hash", () => {
-    const k = generateApiKey();
+  it("generates a prefixed key and verifies its hash", async () => {
+    const k = await generateApiKey();
     expect(k.secret.startsWith(KEY_PREFIX)).toBe(true);
     expect(k.prefix.length).toBe(12);
-    expect(verifyKey(k.secret, k.hash)).toBe(true);
-    expect(verifyKey("lcx_live_wrong", k.hash)).toBe(false);
+    expect(await verifyKey(k.secret, k.hash)).toBe(true);
+    expect(await verifyKey("lcx_live_wrong", k.hash)).toBe(false);
   });
-  it("hash is salted (two hashes of same key differ)", () => {
-    expect(hashKey("lcx_live_abc")).not.toBe(hashKey("lcx_live_abc"));
-    expect(verifyKey("lcx_live_abc", hashKey("lcx_live_abc"))).toBe(true);
+  it("hash is salted (two hashes of same key differ)", async () => {
+    expect(await hashKey("lcx_live_abc")).not.toBe(await hashKey("lcx_live_abc"));
+    expect(await verifyKey("lcx_live_abc", await hashKey("lcx_live_abc"))).toBe(true);
   });
   it("recognizes key shape", () => {
     expect(looksLikeApiKey("lcx_live_abcdefghijklmnop")).toBe(true);
