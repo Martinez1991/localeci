@@ -17,6 +17,40 @@ function normalizeTokens(text: string): string[] {
     .filter(Boolean);
 }
 
+/** Cosine similarity of two vectors, clamped to 0..1. */
+export function cosineSimilarity(a: number[], b: number[]): number {
+  const n = Math.min(a.length, b.length);
+  let dot = 0;
+  let na = 0;
+  let nb = 0;
+  for (let i = 0; i < n; i++) {
+    dot += a[i]! * b[i]!;
+    na += a[i]! * a[i]!;
+    nb += b[i]! * b[i]!;
+  }
+  if (na === 0 || nb === 0) return 0;
+  return Math.max(0, dot / (Math.sqrt(na) * Math.sqrt(nb)));
+}
+
+/**
+ * Deterministic hashing bag-of-words vector — a cheap stand-in for real
+ * embeddings used by the mock provider so embedding-based `--paranoid` works
+ * offline. Cross-language pairs won't align (that's expected of a hash), so the
+ * mock is mainly for wiring/tests; real embeddings come from a provider.
+ */
+export function hashingVector(text: string, dim = 256): number[] {
+  const vec = new Array(dim).fill(0);
+  for (const tok of normalizeTokens(text)) {
+    let h = 2166136261;
+    for (let i = 0; i < tok.length; i++) {
+      h ^= tok.charCodeAt(i);
+      h = Math.imul(h, 16777619);
+    }
+    vec[Math.abs(h) % dim] += 1;
+  }
+  return vec;
+}
+
 /** Jaccard similarity of the two token sets, 0..1. */
 export function tokenSimilarity(a: string, b: string): number {
   const sa = new Set(normalizeTokens(a));

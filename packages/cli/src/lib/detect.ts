@@ -30,7 +30,8 @@ function detectLib(cwd: string): string | null {
     const deps = { ...pkg.dependencies, ...pkg.devDependencies };
     if (deps["next-intl"]) return "next-intl";
     if (deps["react-i18next"] || deps["i18next"]) return "i18next";
-    if (deps["vue-i18n"]) return "vue-i18n";
+    if (deps["vue-i18n"] || deps["@intlify/unplugin-vue-i18n"]) return "vue-i18n";
+    if (deps["svelte-i18n"] || deps["@inlang/paraglide-js"]) return "svelte-i18n";
   } catch {
     /* ignore */
   }
@@ -127,7 +128,8 @@ export async function detectProject(cwd: string): Promise<Detection | null> {
   if (format === "json" && lib === "next-intl") format = "next-intl";
   if (format === "json" && lib === "i18next") format = "i18next";
 
-  const scanInclude = existsSync(join(cwd, "src")) ? ["src/**/*.{tsx,jsx,ts,js}"] : ["**/*.{tsx,jsx,ts,js}"];
+  const codeGlob = "*.{tsx,jsx,ts,js,vue,svelte}";
+  const scanInclude = existsSync(join(cwd, "src")) ? [`src/**/${codeGlob}`] : [`**/${codeGlob}`];
 
   return {
     format,

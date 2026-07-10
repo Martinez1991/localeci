@@ -1,6 +1,22 @@
 import { describe, it, expect } from "vitest";
-import { tokenSimilarity } from "./similarity.js";
+import { tokenSimilarity, cosineSimilarity, hashingVector } from "./similarity.js";
 import { decide } from "./score.js";
+
+describe("cosineSimilarity + hashingVector", () => {
+  it("cosine is 1 for identical vectors, 0 for orthogonal", () => {
+    expect(cosineSimilarity([1, 0, 1], [1, 0, 1])).toBeCloseTo(1, 6);
+    expect(cosineSimilarity([1, 0], [0, 1])).toBe(0);
+  });
+  it("hashingVector is deterministic and diacritic-insensitive", () => {
+    expect(hashingVector("Save changes")).toEqual(hashingVector("Save changes"));
+    // Same tokens ignoring accents → identical vectors → cosine 1.
+    expect(cosineSimilarity(hashingVector("Olá mundo"), hashingVector("Ola mundo"))).toBeCloseTo(1, 6);
+  });
+  it("hashingVector cosine is lower for unrelated text", () => {
+    const s = cosineSimilarity(hashingVector("save your changes now"), hashingVector("delete everything forever"));
+    expect(s).toBeLessThan(0.5);
+  });
+});
 
 describe("tokenSimilarity", () => {
   it("is 1 for identical text and ignores placeholders/case/diacritics", () => {

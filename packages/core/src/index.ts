@@ -23,6 +23,7 @@ export {
   stringsParser,
   androidParser,
   fluentParser,
+  markdownParser,
   flatten,
   unflatten,
   splitKey,

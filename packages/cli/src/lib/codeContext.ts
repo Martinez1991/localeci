@@ -8,18 +8,24 @@
 import { readFileSync } from "node:fs";
 import { glob } from "tinyglobby";
 
-// Match t('key') / t("key") / i18n.t(`key`) and <Trans i18nKey="key">.
+// Match the common i18n call/attribute shapes across React, Vue, and Svelte:
+//   t('key') / $t('key') / i18n.t(`key`)         (react-i18next, vue-i18n)
+//   $_('key') / $format('key')                    (svelte-i18n)
+//   <Trans i18nKey="key">  <i18n-t keypath="key">  v-t="'key'"
 const USAGE_RES = [
   /\bt\(\s*["'`]([\w.:-]+)["'`]/g,
-  /i18nKey\s*=\s*["'`]([\w.:-]+)["'`]/g,
+  /\$(?:t|tc|_|format)\(\s*["'`]([\w.:-]+)["'`]/g,
+  /(?:i18nKey|keypath)\s*=\s*["'`]([\w.:-]+)["'`]/g,
+  /\bv-t\s*=\s*["'`]'?([\w.:-]+)'?["'`]/g,
 ];
 
 function classify(line: string): string | null {
   const l = line.toLowerCase();
+  // `:?` tolerates Vue's bound attributes (:placeholder, :title, …).
   if (/<button|role=["']button|\.button|btn/.test(l)) return "button label";
-  if (/placeholder\s*=/.test(l)) return "input placeholder";
-  if (/aria-label\s*=/.test(l)) return "accessibility label (aria-label)";
-  if (/title\s*=/.test(l)) return "tooltip/title";
+  if (/:?placeholder\s*=/.test(l)) return "input placeholder";
+  if (/:?aria-label\s*=/.test(l)) return "accessibility label (aria-label)";
+  if (/:?title\s*=/.test(l)) return "tooltip/title";
   if (/<h[1-6]|heading/.test(l)) return "heading";
   return null;
 }
@@ -54,9 +60,10 @@ export async function scanCodeContext(opts: CodeContextOptions): Promise<Map<str
         while ((m = re.exec(line)) !== null) {
           const key = m[1];
           if (!key || result.has(key)) continue;
-          // Look at ±2 lines for element context.
+          // Prefer the key's own line; fall back to a ±2-line window so we don't
+          // borrow an adjacent element's context (e.g. a neighboring <button>).
           const window = lines.slice(Math.max(0, i - 2), i + 3).join(" ");
-          const kind = classify(window);
+          const kind = classify(line) ?? classify(window);
           const fileName = file.replace(/\\/g, "/").split("/").slice(-2).join("/");
           result.set(key, kind ? `${kind} (${fileName})` : `used in ${fileName}`);
         }

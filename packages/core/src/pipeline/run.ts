@@ -16,7 +16,7 @@ import { buildContext } from "./context.js";
 import { classifyTier } from "./routing.js";
 import { batchItems, withConcurrency } from "./batch.js";
 import { decide, type Decision } from "./score.js";
-import { tokenSimilarity } from "./similarity.js";
+import { tokenSimilarity, cosineSimilarity } from "./similarity.js";
 import { estimateCost } from "../pricing.js";
 
 export interface PerStringResult {
@@ -67,9 +67,13 @@ export async function runLocale(params: RunLocaleParams): Promise<LocaleRunResul
   const { sourceLocale, targetLocale, source, target, lock, provider, config, glossary, codeContext, today } = params;
 
   const diff = diffLocale({ sourceLocale, targetLocale, source, target, lock });
-  const todo = needsTranslation(diff);
   const targetMap = new Map(target.map((e) => [e.key, e.value]));
   const sourceMap = new Map(source.map((e) => [e.key, e]));
+
+  // Non-translatable entries (meta.translatable === false) are copied verbatim
+  // and never sent to the LLM (e.g. Markdown code/frontmatter segments).
+  const isTranslatable = (key: string): boolean => sourceMap.get(key)?.meta?.translatable !== false;
+  const todo = needsTranslation(diff).filter((d) => isTranslatable(d.key));
 
   // Human learning loop (spec §5.7): a locked string whose on-disk target no
   // longer matches the lock (source unchanged) was edited by a human in review
@@ -216,9 +220,28 @@ export async function runLocale(params: RunLocaleParams): Promise<LocaleRunResul
         tokensOut += res.tokensOut;
         costUsd += estimateCost({ model: res.model, tokensIn: res.tokensIn, tokensOut: res.tokensOut });
         const backMap = new Map(res.translations.map((t) => [t.id, t.text]));
-        for (const c of chunk) {
-          const back = backMap.get(c.id);
-          if (back !== undefined) backSimilarityMap.set(c.id, tokenSimilarity(c.source, back));
+
+        const pairs = chunk
+          .map((c) => ({ id: c.id, source: c.source, back: backMap.get(c.id) }))
+          .filter((p): p is { id: string; source: string; back: string } => p.back !== undefined);
+
+        // Prefer embeddings when the provider supports them; else token overlap.
+        if (provider.embed && pairs.length) {
+          try {
+            const texts = pairs.flatMap((p) => [p.source, p.back]);
+            const emb = await provider.embed(texts);
+            costUsd += estimateCost({ model: emb.model, tokensIn: emb.tokens, tokensOut: 0 });
+            pairs.forEach((p, i) => {
+              const sv = emb.vectors[i * 2];
+              const bv = emb.vectors[i * 2 + 1];
+              if (sv && bv) backSimilarityMap.set(p.id, cosineSimilarity(sv, bv));
+              else backSimilarityMap.set(p.id, tokenSimilarity(p.source, p.back));
+            });
+          } catch {
+            for (const p of pairs) backSimilarityMap.set(p.id, tokenSimilarity(p.source, p.back));
+          }
+        } else {
+          for (const p of pairs) backSimilarityMap.set(p.id, tokenSimilarity(p.source, p.back));
         }
       } catch {
         // Back-translation failure → leave similarity unset (no penalty).
@@ -272,6 +295,11 @@ export async function runLocale(params: RunLocaleParams): Promise<LocaleRunResul
         translatedAt: today,
       });
     }
+  }
+
+  // Copy non-translatable entries verbatim from source (Markdown code/structure).
+  for (const s of source) {
+    if (s.meta?.translatable === false) finalTargetMap.set(s.key, s.value);
   }
 
   // Remove orphans unless kept.
