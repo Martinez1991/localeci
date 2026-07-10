@@ -116,6 +116,19 @@ console.log("\nLocaleCI golden-set quality report");
 console.log("──────────────────────────────────");
 for (const [k, v] of Object.entries(report)) console.log(`  ${k.padEnd(22)} ${v}`);
 
+// Coverage by trap category + locale, so gaps toward the 300-case target show.
+const trapCov = {};
+const localeCov = {};
+for (const c of dataset.cases) {
+  for (const t of c.traps ?? []) trapCov[t] = (trapCov[t] ?? 0) + 1;
+  localeCov[c.targetLocale] = (localeCov[c.targetLocale] ?? 0) + 1;
+}
+console.log("\nCoverage by trap:");
+for (const [t, n] of Object.entries(trapCov).sort((a, b) => b[1] - a[1])) console.log(`  ${t.padEnd(22)} ${n}`);
+console.log("\nCoverage by locale:");
+for (const [l, n] of Object.entries(localeCov).sort((a, b) => b[1] - a[1])) console.log(`  ${l.padEnd(8)} ${n}`);
+console.log(`\n  ${dataset.cases.length} / 300 target cases`);
+
 // Baseline gate.
 const baselinePath = resolve(here, "baseline.json");
 if (process.argv.includes("--update-baseline")) {
