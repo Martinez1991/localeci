@@ -13,8 +13,15 @@ no database). Run it:
 
 ```bash
 pnpm --filter @localeci/cloud test
-pnpm --filter @localeci/cloud typecheck   # typechecks src/lib only
+pnpm --filter @localeci/cloud typecheck        # src/lib only (light, runs in monorepo CI)
+pnpm --filter @localeci/cloud typecheck:full   # routes/pages/server — run in the deploy pipeline
 ```
+
+The Next.js routes/pages are typechecked with `typecheck:full` (tsconfig.full.json)
+once the deploy dependencies are installed. Access-controlled routes (`reviews`,
+`keys`, `orgs/:id/members`) authorize against the resource's org via
+`requireOrgAccess` (deny-by-default) + RBAC (`org_members`). Route params use the
+Next 15 `Promise` signature; the worker secret is compared with `timingSafeEqual`.
 
 ## Deploying (installs the heavy deps)
 

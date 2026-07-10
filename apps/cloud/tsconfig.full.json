@@ -1,0 +1,15 @@
+{
+  "//": "Full typecheck of the Next.js app (routes/pages/server). Runs in the DEPLOY pipeline where next/react/drizzle/stripe are installed (pnpm typecheck:full). The default `typecheck` (tsconfig.lib.json) stays lib-only so monorepo CI is light.",
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "jsx": "preserve",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "types": ["node"],
+    "verbatimModuleSyntax": false,
+    "allowJs": true
+  },
+  "include": ["src", "next-env.d.ts"],
+  "exclude": ["node_modules", "**/*.test.ts"]
+}

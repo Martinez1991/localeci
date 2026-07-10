@@ -1,0 +1,11 @@
+# Default owner for everything.
+* @Martinez1991
+
+# Security-sensitive areas require explicit review.
+/apps/cloud/src/lib/authz.ts        @Martinez1991
+/apps/cloud/src/lib/apiKeys.ts      @Martinez1991
+/apps/cloud/src/lib/ratelimit.ts    @Martinez1991
+/apps/cloud/src/lib/budget.ts       @Martinez1991
+/apps/cloud/src/server/             @Martinez1991
+/.github/workflows/                 @Martinez1991
+/packages/action/                   @Martinez1991

@@ -1,0 +1,22 @@
+# gitleaks config. Extends the default ruleset and allowlists known-safe
+# test fixtures so the secret scan stays actionable (no false positives).
+title = "LocaleCI gitleaks config"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Test fixtures and example placeholders — not real secrets"
+regexes = [
+  '''lcx_live_(abc|wrong|abcdefghijklmnop)''',      # api-key test fixtures
+  '''ft:gpt-4o-mini:acme:localeci-ptbr''',          # fine-tuning model id fixture
+  '''sk-ant-\.\.\.''',                              # .env.example placeholders
+  '''sk_test_\.\.\.''',
+  '''whsec_\.\.\.''',
+  '''price_\.\.\.''',
+]
+paths = [
+  '''.*\.test\.ts$''',
+  '''apps/cloud/\.env\.example$''',
+  '''packages/action/dist/.*''',                    # committed vendored bundle
+]
