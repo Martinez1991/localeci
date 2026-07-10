@@ -111,8 +111,9 @@ Both require `Authorization: Bearer $WORKER_SECRET` — configure the cron secre
 
 ```bash
 vercel --prod
+BASE_URL=https://localeci.dev ./scripts/smoke.sh    # status-code smoke test (docs/smoke-test.md)
 ```
-Smoke test:
+Then confirm the harder behaviors:
 - `/playground` translates and throttles (429) under load — see `load/`.
 - `POST /api/v1/keys` (as an admin) issues a key; the action is in `audit_log`.
 - `POST /api/v1/privacy/export` returns your data; `.../delete` scrubs PII.

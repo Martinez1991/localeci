@@ -143,7 +143,7 @@ See [docs/security.md](./docs/security.md). TL;DR: BYO-key mode never sends stri
 
 ## Deploying the cloud
 
-Step-by-step runbook: [docs/deploy.md](./docs/deploy.md) (Vercel + Neon + Upstash + Sentry + Stripe + GitHub OAuth, env vars, migrations, crons).
+Step-by-step runbook: [docs/deploy.md](./docs/deploy.md) (Vercel + Neon + Upstash + Sentry + Stripe + GitHub OAuth, env vars, migrations, crons). Consolidated env: [apps/cloud/.env.production.example](./apps/cloud/.env.production.example). Verify a deploy with [`scripts/smoke.sh`](./scripts/smoke.sh) (see [docs/smoke-test.md](./docs/smoke-test.md)).
 
 ## License
 
