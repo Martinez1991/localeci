@@ -13,6 +13,22 @@ _One page, on purpose. Last reviewed: 2026-07._
   locale — **never the source or translated text**. A content hash is stored only
   if an operator explicitly sets `LOCALECI_RETENTION=true`.
 
+## Web app defenses
+
+- **CSRF:** state-changing requests are protected by an Origin/Referer check plus
+  a double-submit cookie token (`src/lib/csrf.ts`); Bearer API clients are exempt
+  (no cookies to forge). Enforced in `middleware.ts`.
+- **Security headers:** CSP, HSTS (production), `X-Frame-Options: DENY`,
+  `X-Content-Type-Options: nosniff`, `Referrer-Policy`, `Permissions-Policy` set
+  on every response (`src/lib/headers.ts`).
+- **MFA:** optional TOTP (RFC 6238) step-up, verified against the RFC test
+  vectors (`src/lib/totp.ts`); secret stored per user, enabled only after a
+  verified code.
+- **Rate limiting & spend caps:** per-IP sliding window + daily LLM-spend circuit
+  breaker on public endpoints (`src/lib/{ratelimit,budget}.ts`).
+- **Authorization:** deny-by-default org access (`requireOrgAccess`) + RBAC
+  (`org_members`) on every org-scoped route.
+
 ## Prompt injection
 
 All client string content is treated strictly as **data**. It is passed to the

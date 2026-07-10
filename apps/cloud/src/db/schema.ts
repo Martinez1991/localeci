@@ -14,6 +14,9 @@ export const users = pgTable("users", {
   githubId: text("github_id").notNull().unique(),
   email: text("email").notNull(),
   name: text("name"),
+  // MFA (issue #15): base32 TOTP secret; enabled once the user verifies a code.
+  mfaSecret: text("mfa_secret"),
+  mfaEnabledAt: timestamp("mfa_enabled_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
