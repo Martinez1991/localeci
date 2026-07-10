@@ -1,5 +1,9 @@
 node_modules/
 dist/
+# The GitHub Action must ship its compiled bundle (Actions run the committed
+# dist/index.js). Re-include only the action's dist.
+!packages/action/dist/
+!packages/action/dist/**
 coverage/
 .turbo/
 *.tsbuildinfo

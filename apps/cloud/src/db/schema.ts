@@ -92,6 +92,25 @@ export const translationVectors = pgTable(
   }),
 );
 
+export const roleEnum = pgEnum("member_role", ["owner", "admin", "member"]);
+
+/** Organization membership + RBAC (fixes single-owner limitation; enables Team/Scale). */
+export const orgMembers = pgTable(
+  "org_members",
+  {
+    id: text("id").primaryKey().$defaultFn(createId),
+    orgId: text("org_id")
+      .notNull()
+      .references(() => orgs.id),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id),
+    role: roleEnum("role").notNull().default("member"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (t) => ({ orgUser: uniqueIndex("org_members_org_user_idx").on(t.orgId, t.userId) }),
+);
+
 export const reviewStatusEnum = pgEnum("review_status", ["pending", "approved", "edited", "rejected"]);
 
 /** Collaborative web review queue (spec: review workflow). One row per flagged

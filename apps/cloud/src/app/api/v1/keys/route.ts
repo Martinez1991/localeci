@@ -17,7 +17,7 @@ export async function POST(): Promise<NextResponse> {
   const [org] = await db.select().from(schema.orgs).where(eq(schema.orgs.ownerId, session.user.id));
   if (!org) return NextResponse.json({ error: "No organization" }, { status: 400 });
 
-  const key = generateApiKey();
+  const key = await generateApiKey();
   await db.insert(schema.apiKeys).values({ orgId: org.id, hash: key.hash, prefix: key.prefix });
 
   // Shown once — never retrievable again.
