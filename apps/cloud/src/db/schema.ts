@@ -161,6 +161,24 @@ export const reviews = pgTable(
   (t) => ({ orgBatchIdx: index("reviews_org_batch_idx").on(t.orgId, t.batch, t.status) }),
 );
 
+/** Immutable, hash-chained audit log (issue #16). Append-only; never updated. */
+export const auditLog = pgTable(
+  "audit_log",
+  {
+    seq: integer("seq").primaryKey(), // global chain sequence
+    actorId: text("actor_id"),
+    orgId: text("org_id"),
+    action: text("action").notNull(),
+    target: text("target"),
+    at: timestamp("at").notNull(),
+    meta: jsonb("meta"),
+    prevHash: text("prev_hash").notNull(),
+    hash: text("hash").notNull(),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (t) => ({ orgIdx: index("audit_org_idx").on(t.orgId, t.seq) }),
+);
+
 export const jobStatusEnum = pgEnum("job_status", ["queued", "leased", "done", "failed"]);
 
 /** Persistent job queue for the translation proxy (spec §13). Workers claim

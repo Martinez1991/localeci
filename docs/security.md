@@ -54,6 +54,23 @@ never written to disk or logs.
   `pull-requests: write`. Fork PRs run **read-only** (`check`) — no secrets, no
   commits.
 
+## Privacy & data subject rights (LGPD / GDPR)
+
+- **Access (DSAR):** `POST /api/v1/privacy/export` returns a portable JSON bundle
+  of the user's data (LGPD Art. 18 / GDPR Art. 15). API-key **hashes are never
+  exported** — only prefixes.
+- **Erasure:** `POST /api/v1/privacy/delete` computes a deletion plan
+  (`src/lib/privacy.ts`): transfer ownership of shared orgs to the highest-ranked
+  remaining member, delete solely-owned empty orgs, and scrub PII from the user
+  row. The **hash-chained audit log is retained** (legal obligation); the
+  actor id becomes a dangling pseudonym after the scrub.
+- **Audit log:** every security/privacy action is appended to an immutable,
+  **hash-chained** log (`src/lib/audit.ts`); `verifyChain` detects any
+  edit/reorder/deletion.
+- **Retention:** configurable per category (`DEFAULT_RETENTION_DAYS`), enforced
+  by `POST /api/retention` (cron): usage 400d, reviews 180d, audit 730d, customer
+  translation memory kept until the customer deletes it.
+
 ## Reporting a vulnerability
 
 Email security@localeci.dev. Please do not open a public issue for security

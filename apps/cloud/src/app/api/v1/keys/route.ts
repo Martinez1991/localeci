@@ -10,6 +10,7 @@ import { db, schema } from "../../../../db/index.js";
 import { generateApiKey } from "../../../../lib/apiKeys.js";
 import { requireOrgAccess, ForbiddenError, UnauthorizedError } from "../../../../lib/authz.js";
 import { DbMembershipStore } from "../../../../server/membership.js";
+import { audit } from "../../../../server/audit.js";
 
 export const runtime = "nodejs";
 
@@ -35,6 +36,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
   const key = await generateApiKey();
   await db.insert(schema.apiKeys).values({ orgId, hash: key.hash, prefix: key.prefix });
+  await audit({ actorId: session.user.id, orgId, action: "apikey.created", target: key.prefix, at: new Date().toISOString() });
 
   // Shown once — never retrievable again.
   return NextResponse.json({ apiKey: key.secret, prefix: key.prefix });
