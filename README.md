@@ -121,6 +121,10 @@ The CLI is open source and runs anywhere — your machine, your CI — with your
 - Optimized for the ~15 high-resource languages. Low-resource languages get lower scores *by design* (that's the point of scoring).
 - Visual UI preview (per-language overflow detection) is a cloud/Scale-tier feature; see [apps/cloud](./apps/cloud).
 
+## Documentation
+
+Enterprise engineering docs: [docs/PROJECT-DOCUMENTATION.md](./docs/PROJECT-DOCUMENTATION.md) (vision, functional/NFR requirements, architecture + Mermaid, data model, APIs, security threat models, AI/LLM Top 10, testing, roadmap, backlog, risks, costs, checklists) · API contract: [docs/openapi.yaml](./docs/openapi.yaml) · [Security](./docs/security.md) · [Deploy](./docs/deploy.md).
+
 ## Repository layout
 
 ```
