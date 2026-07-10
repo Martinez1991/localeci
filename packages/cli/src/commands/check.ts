@@ -24,7 +24,7 @@ export async function cmdCheck(opts: CheckOptions): Promise<number> {
   const failStrict = opts.strict !== false;
   if (opts.json) {
     const fail =
-      report.issues.some((i) => i.kind === "broken" || i.kind === "below-threshold") ||
+      report.issues.some((i) => i.kind === "broken" || i.kind === "below-threshold" || i.kind === "store-limit") ||
       (failStrict && report.issues.some((i) => i.kind === "missing"));
     const out = {
       ok: !fail,
@@ -42,7 +42,13 @@ export async function cmdCheck(opts: CheckOptions): Promise<number> {
   const broken = report.issues.filter((i) => i.kind === "broken");
   const missing = report.issues.filter((i) => i.kind === "missing");
   const below = report.issues.filter((i) => i.kind === "below-threshold");
+  const storeLimit = report.issues.filter((i) => i.kind === "store-limit");
 
+  if (storeLimit.length) {
+    log.error(`${storeLimit.length} field(s) over the app store character limit:`);
+    for (const i of storeLimit.slice(0, 15)) log.info(`  ${c.red("✘")} ${c.dim(i.locale)} ${i.file} — ${i.message}`);
+    log.info("");
+  }
   if (broken.length) {
     log.error(`${broken.length} broken translation(s):`);
     for (const i of broken.slice(0, 25)) log.info(`  ${c.red("✘")} ${c.dim(i.locale)} ${i.key} — ${i.message}`);
@@ -57,7 +63,7 @@ export async function cmdCheck(opts: CheckOptions): Promise<number> {
     log.warn(`${missing.length} string(s) not yet translated. Run ${c.cyan("localeci translate")}.`);
   }
 
-  const fail = broken.length > 0 || below.length > 0 || (opts.strict !== false && missing.length > 0);
+  const fail = broken.length > 0 || below.length > 0 || storeLimit.length > 0 || (opts.strict !== false && missing.length > 0);
   if (fail) {
     log.error("check failed.");
     return 1;

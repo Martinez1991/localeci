@@ -3,7 +3,7 @@ import { LockStore, resolveGlossaryForLocale } from "@localeci/core";
 import { createProviderFromConfig, MissingApiKeyError } from "@localeci/providers";
 import { log, c, table, scoreColor } from "../lib/output.js";
 import { loadConfig, loadGlossary, loadLock, saveLock } from "../lib/project.js";
-import { scanCodeContext } from "../lib/codeContext.js";
+import { scanContext } from "../lib/codeContext.js";
 import { translateProject } from "../lib/engine.js";
 
 export interface TranslateOptions {
@@ -51,7 +51,7 @@ export async function cmdTranslate(opts: TranslateOptions): Promise<number> {
   let codeContext: Map<string, string> | undefined;
   if (config.context.scanCode && config.context.include.length) {
     if (!quiet) log.step("Scanning code for string context…");
-    codeContext = await scanCodeContext({ cwd, include: config.context.include });
+    codeContext = await scanContext({ cwd, include: config.context.include, ast: config.context.ast });
     if (!quiet) log.dim(`  found context for ${codeContext.size} keys`);
   }
 

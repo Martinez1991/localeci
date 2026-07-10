@@ -14,6 +14,7 @@ export const FormatSchema = z.enum([
   "android",
   "fluent",
   "markdown",
+  "text",
 ]);
 
 export const SourceSchema = z.object({
@@ -48,6 +49,8 @@ export const QualitySchema = z.object({
 export const ContextConfigSchema = z.object({
   scanCode: z.boolean().default(false),
   include: z.array(z.string()).default([]),
+  /** Use the TypeScript-AST scanner when available (falls back to grep). */
+  ast: z.boolean().default(true),
 });
 
 export const StyleSchema = z.object({

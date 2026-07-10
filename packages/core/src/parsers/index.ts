@@ -7,6 +7,7 @@ import { stringsParser } from "./strings.js";
 import { androidParser } from "./androidXml.js";
 import { fluentParser } from "./fluent.js";
 import { markdownParser } from "./markdown.js";
+import { textParser } from "./text.js";
 
 const REGISTRY: Record<FormatId, Parser> = {
   json: jsonParser,
@@ -18,6 +19,7 @@ const REGISTRY: Record<FormatId, Parser> = {
   android: androidParser,
   fluent: fluentParser,
   markdown: markdownParser,
+  text: textParser,
 };
 
 export function getParser(format: FormatId): Parser {
@@ -36,6 +38,7 @@ export function formatFromExtension(path: string): FormatId | null {
   if (lower.endsWith(".xml")) return "android";
   if (lower.endsWith(".ftl")) return "fluent";
   if (lower.endsWith(".md") || lower.endsWith(".mdx") || lower.endsWith(".markdown")) return "markdown";
+  if (lower.endsWith(".txt")) return "text";
   return null;
 }
 
@@ -51,4 +54,5 @@ export {
   androidParser,
   fluentParser,
   markdownParser,
+  textParser,
 };

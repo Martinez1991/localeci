@@ -7,7 +7,7 @@ import { cmdStatus } from "./commands/status.js";
 import { log, c } from "./lib/output.js";
 import { ConfigError } from "@localeci/core";
 
-const VERSION = "0.3.0";
+const VERSION = "0.4.0";
 
 const HELP = `${c.bold("localeci")} — ship your app in 30 languages, without leaving Git.
 
