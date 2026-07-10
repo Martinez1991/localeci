@@ -44,3 +44,7 @@ pnpm dev
   production — see `src/lib/apiKeys.ts`), shown once, revocable.
 - **Limits**: `src/lib/plans.ts` is the single source of truth for both
   enforcement and the pricing UI.
+- **Visual UI preview** (Scale tier): `src/lib/preview.ts` estimates whether each
+  translation fits its element (button/nav/title/…) and flags overflow. Exposed
+  at `POST /api/v1/preview` and rendered at `/dashboard/preview`. Pure logic is
+  unit-tested; the page is a reference renderer.

@@ -87,10 +87,22 @@ export const JudgeResponseSchema = z.object({
   ),
 });
 
+export interface EmbedResult {
+  vectors: number[][];
+  model: string;
+  tokens: number;
+}
+
 export interface Provider {
   name: string;
   translate(batch: TranslateBatch): Promise<TranslateResult>;
   judge(batch: JudgeBatch): Promise<JudgeResult>;
+  /**
+   * Optional embeddings for back-translation similarity (spec §5.6). Providers
+   * without a native embeddings API leave this undefined; `--paranoid` falls
+   * back to token-set similarity.
+   */
+  embed?(texts: string[]): Promise<EmbedResult>;
 }
 
 /** Weighted average of a judge score, normalized to 0–100 (accuracy weight 2). */

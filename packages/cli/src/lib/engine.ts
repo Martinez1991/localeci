@@ -197,6 +197,7 @@ export async function checkProject(opts: CheckOptions): Promise<CheckReport> {
       for (const t of target) {
         const src = sourceMap.get(t.key);
         if (!src) continue; // orphan; not a check failure by default
+        if (src.meta?.translatable === false) continue; // verbatim passthrough
         const validation = validateTranslation({
           source: src.value,
           target: t.value,

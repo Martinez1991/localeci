@@ -27,6 +27,19 @@ export function diffLocale(input: DiffInput): DiffEntry[] {
 
   // Walk the source keys → missing / stale / locked / ok.
   for (const s of source) {
+    // Non-translatable entries (Markdown code/structure) are always "fine" —
+    // they're copied verbatim, never translated, and never a check failure.
+    if (s.meta?.translatable === false) {
+      out.push({
+        key: s.key,
+        locale: targetLocale,
+        state: "locked-auto",
+        source: s.value,
+        ...(targetMap.get(s.key) ? { target: targetMap.get(s.key)!.value } : {}),
+        meta: s.meta,
+      });
+      continue;
+    }
     const lockEntry = lock.lookup({
       sourceLocale,
       key: s.key,

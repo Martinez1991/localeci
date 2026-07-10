@@ -17,7 +17,8 @@ export type FormatId =
   | "po"
   | "strings" // iOS Localizable.strings
   | "android" // Android strings.xml
-  | "fluent"; // Project Fluent (.ftl)
+  | "fluent" // Project Fluent (.ftl)
+  | "markdown"; // Markdown / MDX docs
 
 /**
  * Per-entry metadata a parser can attach and a serializer must be able to
@@ -34,6 +35,12 @@ export interface EntryMeta {
   pluralSource?: string;
   /** gettext fuzzy flag. */
   fuzzy?: boolean;
+  /**
+   * False marks an entry that must be copied verbatim to the target, never sent
+   * to the LLM (e.g. Markdown code blocks, frontmatter, structural segments).
+   * Defaults to true when omitted.
+   */
+  translatable?: boolean;
 }
 
 /**

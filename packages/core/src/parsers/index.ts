@@ -6,6 +6,7 @@ import { poParser } from "./po.js";
 import { stringsParser } from "./strings.js";
 import { androidParser } from "./androidXml.js";
 import { fluentParser } from "./fluent.js";
+import { markdownParser } from "./markdown.js";
 
 const REGISTRY: Record<FormatId, Parser> = {
   json: jsonParser,
@@ -16,6 +17,7 @@ const REGISTRY: Record<FormatId, Parser> = {
   strings: stringsParser,
   android: androidParser,
   fluent: fluentParser,
+  markdown: markdownParser,
 };
 
 export function getParser(format: FormatId): Parser {
@@ -33,6 +35,7 @@ export function formatFromExtension(path: string): FormatId | null {
   if (lower.endsWith(".strings")) return "strings";
   if (lower.endsWith(".xml")) return "android";
   if (lower.endsWith(".ftl")) return "fluent";
+  if (lower.endsWith(".md") || lower.endsWith(".mdx") || lower.endsWith(".markdown")) return "markdown";
   return null;
 }
 
@@ -47,4 +50,5 @@ export {
   stringsParser,
   androidParser,
   fluentParser,
+  markdownParser,
 };

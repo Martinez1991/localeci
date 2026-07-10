@@ -13,6 +13,7 @@ export const FormatSchema = z.enum([
   "strings",
   "android",
   "fluent",
+  "markdown",
 ]);
 
 export const SourceSchema = z.object({

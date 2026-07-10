@@ -67,8 +67,29 @@ export function createOpenAIProvider(opts: OpenAIOptions): Provider {
     });
   };
 
+  const embedModel = process.env.LOCALECI_OPENAI_EMBED_MODEL ?? "text-embedding-3-small";
+
   return {
     name: "openai",
+    async embed(texts: string[]) {
+      return withRetry(async () => {
+        const resp = await doFetch(`${baseUrl}/v1/embeddings`, {
+          method: "POST",
+          headers: { "content-type": "application/json", authorization: `Bearer ${opts.apiKey}` },
+          body: JSON.stringify({ model: embedModel, input: texts }),
+        });
+        if (!resp.ok) {
+          const retryable = resp.status === 429 || resp.status >= 500;
+          throw new ProviderError(`OpenAI embeddings ${resp.status}: ${await safeText(resp)}`, retryable);
+        }
+        const data = (await resp.json()) as {
+          data: Array<{ embedding: number[]; index: number }>;
+          usage?: { total_tokens?: number };
+        };
+        const vectors = [...data.data].sort((a, b) => a.index - b.index).map((d) => d.embedding);
+        return { vectors, model: embedModel, tokens: data.usage?.total_tokens ?? 0 };
+      });
+    },
     async translate(batch: TranslateBatch): Promise<TranslateResult> {
       const prompt = buildTranslatePrompt(batch);
       const { value, tokensIn, tokensOut, model } = await callAndParse(

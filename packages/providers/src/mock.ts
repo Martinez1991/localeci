@@ -17,6 +17,7 @@ import {
   tryParseIcu,
   requiredCardinalCategories,
   looksLikeIcu,
+  hashingVector,
 } from "@localeci/core";
 import {
   TYPE,
@@ -184,6 +185,13 @@ export function createMockProvider(opts: MockOptions = {}): Provider {
         issues: [] as string[],
       }));
       return { scores, model, tokensIn: 0, tokensOut: 0 };
+    },
+    async embed(texts: string[]) {
+      return {
+        vectors: texts.map((t) => hashingVector(t)),
+        model: "mock/embed-1",
+        tokens: texts.reduce((a, t) => a + Math.ceil(t.length / 4), 0),
+      };
     },
   };
 }

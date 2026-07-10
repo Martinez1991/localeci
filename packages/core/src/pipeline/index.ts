@@ -7,6 +7,6 @@ export type { ContextBundle, BuildContextOptions } from "./context.js";
 export { batchItems, withConcurrency } from "./batch.js";
 export { decide } from "./score.js";
 export type { Decision, ScoreDecision } from "./score.js";
-export { tokenSimilarity } from "./similarity.js";
+export { tokenSimilarity, cosineSimilarity, hashingVector } from "./similarity.js";
 export { runLocale } from "./run.js";
 export type { RunLocaleParams, LocaleRunResult, PerStringResult } from "./run.js";
