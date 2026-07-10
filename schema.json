@@ -38,6 +38,11 @@
             "top": { "type": "string" },
             "judge": { "type": "string" }
           }
+        },
+        "fineTuned": {
+          "type": "object",
+          "description": "Fine-tuned model id per target locale (overrides tier routing)",
+          "additionalProperties": { "type": "string" }
         }
       }
     },

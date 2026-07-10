@@ -12,6 +12,8 @@ export * from "./pipeline/index.js";
 export { estimateCost, rateForModel } from "./pricing.js";
 export { storeFieldLimit, checkStoreLimit } from "./storeMetadata.js";
 export type { StoreLimitCheck } from "./storeMetadata.js";
+export { buildFineTuneDataset, buildOpenAIExample, fineTuneReadiness } from "./finetune.js";
+export type { FineTunePair, DatasetFormat, DatasetOptions, FineTuneReadiness } from "./finetune.js";
 export { MemorySemanticMemory } from "./semantic.js";
 export type { SemanticMemory, SemanticEntry, SemanticMatch } from "./semantic.js";
 

@@ -105,7 +105,7 @@ ICU MessageFormat is translated **branch-by-branch** and recomposed, with CLDR p
 }
 ```
 
-Commands: `init` · `translate [--to de,ja] [--mock] [--paranoid] [--json]` · `check [--json]` (CI: exits non-zero on missing/broken/low-score) · `status`.
+Commands: `init` · `translate [--to de,ja] [--mock] [--paranoid] [--json]` · `check [--json]` (CI: exits non-zero on missing/broken/low-score) · `status` · `dataset` (export a fine-tuning JSONL from approved translations).
 
 `--paranoid` back-translates each string and cross-checks similarity to the source (spec §5.6) — using embeddings when the provider supports them (OpenAI), falling back to token-set overlap otherwise. `--json` emits a machine-readable report with per-locale scores, flagged strings, tokens, and estimated cost. Human edits to translations in a PR are detected and re-locked as `approvedBy: human`, then reused as few-shot examples for similar strings (spec §5.7).
 

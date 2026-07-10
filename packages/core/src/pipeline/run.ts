@@ -178,6 +178,7 @@ export async function runLocale(params: RunLocaleParams): Promise<LocaleRunResul
         })),
         style: config.style,
         glossary: glossary.map((g) => ({ term: g.term, target: g.target, neverTranslate: g.neverTranslate })),
+        ...(config.provider.fineTuned?.[targetLocale] ? { modelOverride: config.provider.fineTuned[targetLocale] } : {}),
       });
       tokensIn += res.tokensIn;
       tokensOut += res.tokensOut;
