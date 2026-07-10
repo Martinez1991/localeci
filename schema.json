@@ -1,0 +1,73 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://localeci.dev/schema.json",
+  "title": "LocaleCI config",
+  "type": "object",
+  "required": ["source", "targets"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string" },
+    "source": {
+      "type": "object",
+      "required": ["locale", "files", "format"],
+      "additionalProperties": false,
+      "properties": {
+        "locale": { "type": "string", "description": "Source locale, e.g. \"en\"" },
+        "files": { "type": "string", "description": "Glob for source files, e.g. \"locales/en/**/*.json\"" },
+        "format": { "enum": ["i18next", "next-intl", "json", "yaml", "po"] }
+      }
+    },
+    "targets": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string" },
+      "description": "Target locales, e.g. [\"pt-BR\", \"de\", \"ja\"]"
+    },
+    "provider": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": { "enum": ["anthropic", "openai", "mock", "cloud"] },
+        "apiKeyEnv": { "type": "string", "description": "Env var holding the API key" },
+        "baseUrl": { "type": "string", "format": "uri" },
+        "models": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "cheap": { "type": "string" },
+            "top": { "type": "string" },
+            "judge": { "type": "string" }
+          }
+        }
+      }
+    },
+    "quality": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "threshold": { "type": "integer", "minimum": 0, "maximum": 100 },
+        "onBelowThreshold": { "enum": ["flag", "fail", "skip"] }
+      }
+    },
+    "glossary": { "type": "string", "description": "Path to localeci.glossary.json" },
+    "context": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "scanCode": { "type": "boolean" },
+        "include": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "style": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "tone": { "type": "string" },
+        "audience": { "type": "string" },
+        "notes": { "type": "string" }
+      }
+    },
+    "keepOrphans": { "type": "boolean", "description": "Keep target keys whose source key disappeared" },
+    "batchSize": { "type": "integer", "minimum": 1, "maximum": 100, "description": "Strings per translation batch (default 25)" }
+  }
+}

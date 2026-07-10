@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "note": "Golden set v1. Each case is a real-world UI string with trap tags. References are approved human translations; the quality-regression job compares a provider's output against them, while the always-on structural job (mock provider) asserts validators never regress. Grows to 300 in week 6.",
+  "sourceLocale": "en",
+  "cases": [
+    { "id": "btn.save", "source": "Save", "targetLocale": "pt-BR", "reference": "Salvar", "traps": ["one-word-button"] },
+    { "id": "btn.cancel", "source": "Cancel", "targetLocale": "de", "reference": "Abbrechen", "traps": ["one-word-button"] },
+    { "id": "btn.save.changes", "source": "Save changes", "targetLocale": "pt-BR", "reference": "Salvar alterações", "traps": ["button"] },
+    { "id": "err.card_declined", "source": "Your card was declined", "targetLocale": "pt-BR", "reference": "Seu cartão foi recusado", "traps": ["error"] },
+    { "id": "err.expired", "source": "Your card has expired", "targetLocale": "es", "reference": "Tu tarjeta ha caducado", "traps": ["error"] },
+    { "id": "ph.greeting", "source": "Hello {name}", "targetLocale": "pt-BR", "reference": "Olá {name}", "traps": ["placeholder"] },
+    { "id": "ph.double", "source": "You have {{count}} new messages from {{sender}}", "targetLocale": "de", "reference": "Sie haben {{count}} neue Nachrichten von {{sender}}", "traps": ["placeholder", "double-placeholder"] },
+    { "id": "ph.printf", "source": "Uploaded %d of %d files", "targetLocale": "fr", "reference": "%d fichiers sur %d téléversés", "traps": ["placeholder", "printf", "reordered"] },
+    { "id": "icu.plural.en_pt", "source": "{count, plural, one {# item} other {# items}}", "targetLocale": "pt-BR", "reference": "{count, plural, one {# item} many {# de itens} other {# itens}}", "traps": ["icu-plural"] },
+    { "id": "icu.plural.pl", "source": "{count, plural, one {# file} other {# files}}", "targetLocale": "pl", "reference": "{count, plural, one {# plik} few {# pliki} many {# plików} other {# pliku}}", "traps": ["icu-plural", "polish-few"] },
+    { "id": "icu.plural.ja", "source": "{count, plural, one {# item} other {# items}}", "targetLocale": "ja", "reference": "{count, plural, other {#個の商品}}", "traps": ["icu-plural", "japanese-other-only"] },
+    { "id": "icu.select.gender", "source": "{gender, select, male {He} female {She} other {They}} liked your post", "targetLocale": "de", "reference": "{gender, select, male {Er} female {Sie} other {Sie}} hat deinen Beitrag geliked", "traps": ["icu-select"] },
+    { "id": "html.link", "source": "Read our <0>privacy policy</0>", "targetLocale": "pt-BR", "reference": "Leia nossa <0>política de privacidade</0>", "traps": ["html", "tag-index"] },
+    { "id": "html.nested", "source": "Click <b>Save</b> then <i>Publish</i>", "targetLocale": "de", "reference": "Klicke auf <b>Speichern</b> und dann auf <i>Veröffentlichen</i>", "traps": ["html", "nested-tags"] },
+    { "id": "idiom.tagline", "source": "Hit the ground running", "targetLocale": "pt-BR", "reference": "Comece com tudo", "traps": ["idiom", "hard"] },
+    { "id": "idiom.blast", "source": "Blast your growth", "targetLocale": "ja", "reference": "成長を加速させる", "traps": ["idiom", "marketing", "low-resource"] },
+    { "id": "ambiguous.save.button", "source": "Save", "targetLocale": "de", "reference": "Speichern", "context": "button label", "traps": ["ambiguous", "needs-context"] },
+    { "id": "ambiguous.save.prose", "source": "Save", "targetLocale": "de", "reference": "sparen", "context": "prose about saving money", "traps": ["ambiguous", "needs-context"] },
+    { "id": "glossary.workspace", "source": "Open your workspace", "targetLocale": "pt-BR", "reference": "Abra seu workspace", "glossaryNeverTranslate": ["workspace"], "traps": ["glossary", "never-translate"] },
+    { "id": "long.marketing", "source": "The all-in-one platform that helps your team ship faster, collaborate better, and delight your customers.", "targetLocale": "de", "reference": "Die All-in-One-Plattform, mit der dein Team schneller liefert, besser zusammenarbeitet und deine Kunden begeistert.", "traps": ["long", "marketing", "top-model"] },
+    { "id": "tooltip.short", "source": "Copy to clipboard", "targetLocale": "fr", "reference": "Copier dans le presse-papiers", "traps": ["tooltip"] },
+    { "id": "empty.state", "source": "No results found", "targetLocale": "es", "reference": "No se encontraron resultados", "traps": ["empty-state"] },
+    { "id": "date.relative", "source": "{count, plural, one {# day ago} other {# days ago}}", "targetLocale": "ru", "reference": "{count, plural, one {# день назад} few {# дня назад} many {# дней назад} other {# дня назад}}", "traps": ["icu-plural", "russian"] },
+    { "id": "brand.keep", "source": "Sign in with GitHub", "targetLocale": "pt-BR", "reference": "Entrar com GitHub", "glossaryNeverTranslate": ["GitHub"], "traps": ["brand", "never-translate"] },
+    { "id": "aria.close", "source": "Close dialog", "targetLocale": "de", "reference": "Dialog schließen", "context": "aria-label", "traps": ["a11y"] }
+  ]
+}

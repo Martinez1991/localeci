@@ -1,0 +1,36 @@
+{
+  "name": "@localeci/providers",
+  "version": "0.1.0",
+  "description": "LocaleCI LLM provider adapters (anthropic, openai, mock, cloud)",
+  "license": "FSL-1.1-Apache-2.0",
+  "repository": { "type": "git", "url": "git+https://github.com/localeci/localeci.git", "directory": "packages/providers" },
+  "homepage": "https://localeci.dev",
+  "publishConfig": { "access": "public", "provenance": true },
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@formatjs/icu-messageformat-parser": "^2.9.8",
+    "@localeci/core": "workspace:*",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "tsup": "^8.3.5",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "nav": {
+    "home": "Home",
+    "pricing": "Pricing",
+    "signIn": "Sign in with GitHub"
+  },
+  "hero": {
+    "title": "Ship your product to the world",
+    "subtitle": "The all-in-one platform that helps your team ship faster and delight customers.",
+    "cta": "Start free"
+  },
+  "cart": {
+    "items": "{count, plural, one {# item in your cart} other {# items in your cart}}",
+    "checkout": "Checkout",
+    "empty": "Your cart is empty"
+  },
+  "errors": {
+    "cardDeclined": "Your card was declined",
+    "required": "This field is required"
+  },
+  "footer": {
+    "terms": "Read our <0>terms of service</0>"
+  }
+}

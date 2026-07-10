@@ -1,0 +1,25 @@
+{
+  "name": "@localeci/action",
+  "version": "0.1.0",
+  "description": "LocaleCI GitHub Action — translate i18n files on PRs and post a quality report",
+  "license": "FSL-1.1-Apache-2.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@actions/core": "^1.11.1",
+    "@localeci/core": "workspace:*",
+    "@localeci/providers": "workspace:*",
+    "localeci": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "tsup": "^8.3.5",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  }
+}
