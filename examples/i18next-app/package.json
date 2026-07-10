@@ -1,0 +1,11 @@
+{
+  "name": "example-i18next-app",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Sample i18next app used in the LocaleCI demo and e2e tests",
+  "dependencies": {
+    "i18next": "^23.0.0",
+    "react": "^19.0.0",
+    "react-i18next": "^15.0.0"
+  }
+}

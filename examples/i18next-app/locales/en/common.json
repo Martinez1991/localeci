@@ -1,0 +1,16 @@
+{
+  "greeting": "Welcome back, {{name}}!",
+  "buttons": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete"
+  },
+  "messages": {
+    "unread": "{{count}} unread messages",
+    "saved": "Your changes have been saved",
+    "confirmDelete": "Are you sure you want to delete this?"
+  },
+  "onboarding": {
+    "tagline": "Hit the ground running"
+  }
+}

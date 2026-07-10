@@ -1,0 +1,14 @@
+{
+  "name": "@localeci/golden",
+  "version": "0.1.0",
+  "private": true,
+  "description": "LocaleCI golden set + quality-regression harness",
+  "type": "module",
+  "scripts": {
+    "quality": "node run.mjs"
+  },
+  "dependencies": {
+    "@localeci/core": "workspace:*",
+    "@localeci/providers": "workspace:*"
+  }
+}

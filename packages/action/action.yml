@@ -1,0 +1,45 @@
+name: "LocaleCI"
+description: "Translate your i18n files with LLMs on every PR — with a per-string quality score."
+author: "LocaleCI"
+branding:
+  icon: "globe"
+  color: "purple"
+
+inputs:
+  locales:
+    description: "Comma-separated target locales (overrides config targets). Optional."
+    required: false
+  api-key:
+    description: "LocaleCI cloud key or your own provider key. Exposed to the CLI as LOCALECI_KEY."
+    required: false
+  provider:
+    description: "Provider override: anthropic | openai | cloud | mock."
+    required: false
+  config:
+    description: "Path to localeci.config.json (default: repo root)."
+    required: false
+    default: "."
+  commit:
+    description: "Commit translations + lockfile back to the PR branch."
+    required: false
+    default: "true"
+  comment:
+    description: "Post/update a single quality-report comment on the PR."
+    required: false
+    default: "true"
+  github-token:
+    description: "Token used to comment and push. Defaults to the workflow token."
+    required: false
+    default: "${{ github.token }}"
+
+outputs:
+  translated:
+    description: "Total strings translated across locales."
+  flagged:
+    description: "Total strings flagged for review."
+  failed:
+    description: "Total strings that failed validation."
+
+runs:
+  using: "node20"
+  main: "dist/index.js"

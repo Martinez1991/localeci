@@ -1,0 +1,26 @@
+# Example: add LocaleCI to any repo. Every PR that touches strings gets
+# translations committed back + a quality report comment.
+name: Localize
+
+on:
+  pull_request:
+    paths:
+      - "messages/**"
+
+permissions:
+  contents: write # commit translations to the PR branch
+  pull-requests: write # post the quality-report comment
+
+jobs:
+  localize:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+      # Pin the action by SHA in production (supply-chain hygiene, spec §11):
+      #   uses: localeci/localeci/packages/action@<full-40-char-sha>
+      - uses: localeci/localeci/packages/action@v1
+        with:
+          locales: pt-BR, de, ja, es
+          api-key: ${{ secrets.LOCALECI_KEY }} # or your own ANTHROPIC_API_KEY

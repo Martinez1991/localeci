@@ -1,0 +1,42 @@
+{
+  "name": "localeci",
+  "version": "0.1.0",
+  "description": "Ship your app in 30 languages, without leaving Git. LLM i18n translation with a per-string quality score.",
+  "license": "FSL-1.1-Apache-2.0",
+  "type": "module",
+  "bin": {
+    "localeci": "./dist/cli.js"
+  },
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": ["dist"],
+  "keywords": ["i18n", "l10n", "translation", "localization", "cli", "github-action", "llm", "i18next", "next-intl", "gettext"],
+  "repository": { "type": "git", "url": "git+https://github.com/localeci/localeci.git", "directory": "packages/cli" },
+  "homepage": "https://localeci.dev",
+  "publishConfig": { "access": "public", "provenance": true },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@localeci/core": "workspace:*",
+    "@localeci/providers": "workspace:*",
+    "picocolors": "^1.1.1",
+    "tinyglobby": "^0.2.10"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "tsup": "^8.3.5",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  }
+}
