@@ -14,6 +14,7 @@ import { db, schema } from "../../../../../../db/index.js";
 import { requireOrgAccess, ForbiddenError, UnauthorizedError } from "../../../../../../lib/authz.js";
 import { canInvite, type Member } from "../../../../../../lib/membership.js";
 import { DbMembershipStore } from "../../../../../../server/membership.js";
+import { enforceRateLimit } from "../../../../../../server/guard.js";
 
 export const runtime = "nodejs";
 
@@ -41,6 +42,8 @@ export async function GET(_req: NextRequest, ctx: { params: Promise<{ id: string
 export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string }> }): Promise<NextResponse> {
   const { id: orgId } = await ctx.params;
   const session = await auth();
+  const limited = await enforceRateLimit(req, "write", { subjectId: session?.user?.id });
+  if (limited) return limited;
   try {
     await requireOrgAccess(new DbMembershipStore(), session?.user?.id, orgId, "admin");
   } catch (e) {

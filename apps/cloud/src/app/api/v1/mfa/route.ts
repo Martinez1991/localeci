@@ -9,12 +9,15 @@ import { eq } from "drizzle-orm";
 import { auth } from "../../../../auth.js";
 import { db, schema } from "../../../../db/index.js";
 import { generateSecret, otpauthUri, verifyTotp } from "../../../../lib/totp.js";
+import { enforceRateLimit } from "../../../../server/guard.js";
 
 export const runtime = "nodejs";
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
   const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const limited = await enforceRateLimit(req, "auth", { subjectId: session.user.id });
+  if (limited) return limited;
 
   const body = (await req.json()) as { action: "enroll" | "verify"; code?: string };
   const [user] = await db.select().from(schema.users).where(eq(schema.users.id, session.user.id));

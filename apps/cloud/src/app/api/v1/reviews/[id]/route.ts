@@ -13,12 +13,15 @@ import { requireOrgAccess, ForbiddenError, UnauthorizedError } from "../../../..
 import { DbMembershipStore } from "../../../../../server/membership.js";
 import { platformProvider } from "../../../../../lib/platformProvider.js";
 import { DbSemanticMemory } from "../../../../../server/semanticMemory.js";
+import { enforceRateLimit } from "../../../../../server/guard.js";
 
 export const runtime = "nodejs";
 
 export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string }> }): Promise<NextResponse> {
   const { id } = await ctx.params; // Next 15: params is a Promise
   const session = await auth();
+  const limited = await enforceRateLimit(req, "write", { subjectId: session?.user?.id });
+  if (limited) return limited;
 
   const [row] = await db.select().from(schema.reviews).where(eq(schema.reviews.id, id));
   if (!row) return NextResponse.json({ error: "Not found" }, { status: 404 });
