@@ -70,6 +70,12 @@ pnpm dev
 - **Live playground**: `src/lib/playground.ts` runs the full pipeline on a single
   string (translation + score + validator issues). `POST /api/v1/playground` and
   the `/playground` page let anyone try the quality pipeline before signing up.
+- **Hot TM cache** (issue #18): `src/lib/cache.ts` (`InMemoryLru` + `withCache`)
+  fronts the translate proxy so repeated strings are served from cache ($0, no
+  LLM). Production swaps in `KvCache` (Vercel KV / Upstash) to share across
+  instances. Load tests + latency SLOs live in [`load/`](../../load).
+- **Read scaling**: point dashboard/usage reads at a Neon read replica
+  (`DATABASE_URL_REPLICA`) as traffic grows; the write path stays on the primary.
 
 ## Fine-tuning (spec §13)
 

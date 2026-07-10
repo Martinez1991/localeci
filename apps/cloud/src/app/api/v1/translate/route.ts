@@ -5,7 +5,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { bearerFrom, resolveOrg } from "../../../../server/authKey.js";
 import { handleTranslate } from "../../../../lib/proxy.js";
-import { platformProvider } from "../../../../lib/platformProvider.js";
+import { cachedPlatformProvider } from "../../../../lib/platformProvider.js";
 import { DbUsageStore } from "../../../../server/dbUsage.js";
 
 export const runtime = "nodejs";
@@ -22,7 +22,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   const retention = process.env.LOCALECI_RETENTION === "true"; // zero-retention by default
 
   const result = await handleTranslate(batch, {
-    provider: platformProvider(),
+    provider: cachedPlatformProvider(),
     usage: new DbUsageStore(),
     org,
     today,
