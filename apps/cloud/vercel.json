@@ -1,0 +1,11 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "nextjs",
+  "crons": [
+    { "path": "/api/worker", "schedule": "*/1 * * * *" },
+    { "path": "/api/retention", "schedule": "0 3 * * *" }
+  ],
+  "functions": {
+    "src/app/api/**/route.ts": { "maxDuration": 60 }
+  }
+}
