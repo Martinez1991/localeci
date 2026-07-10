@@ -56,3 +56,17 @@ pnpm dev
   approve/edit/reject with the same deterministic validation the pipeline uses;
   approvals feed the semantic TM. `POST /api/v1/reviews/:id` and
   `/dashboard/reviews` are reference wrappers.
+- **Persistent job queue** (spec §13): `src/lib/queue.ts` is a pure, unit-tested
+  lease-based queue with exponential-backoff retries; under load the proxy
+  enqueues instead of blocking. Postgres-backed `DbJobQueue` (`FOR UPDATE SKIP
+  LOCKED`) + a `jobs` table + `POST /api/worker` drain endpoint.
+- **Live playground**: `src/lib/playground.ts` runs the full pipeline on a single
+  string (translation + score + validator issues). `POST /api/v1/playground` and
+  the `/playground` page let anyone try the quality pipeline before signing up.
+
+## Fine-tuning (spec §13)
+
+`localeci dataset` exports human-approved translations as an OpenAI chat JSONL
+(mirroring the production prompt) and reports readiness against the 50M-string
+trigger. Once fine-tuned, set `provider.fineTuned["pt-BR"] = "ft:…"` in the
+config and the pipeline routes that locale to your model automatically.

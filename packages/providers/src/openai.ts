@@ -32,8 +32,8 @@ export function createOpenAIProvider(opts: OpenAIOptions): Provider {
   const doFetch = opts.fetchImpl ?? fetch;
   const models = { ...DEFAULTS, ...opts.models };
 
-  const chat: ChatFn = async (messages: ChatMessage, purpose, tier) => {
-    const model = purpose === "judge" ? models.judge : tier === "top" ? models.top : models.cheap;
+  const chat: ChatFn = async (messages: ChatMessage, purpose, tier, modelOverride) => {
+    const model = modelOverride ?? (purpose === "judge" ? models.judge : tier === "top" ? models.top : models.cheap);
     return withRetry(async () => {
       const resp = await doFetch(`${baseUrl}/v1/chat/completions`, {
         method: "POST",
@@ -98,6 +98,7 @@ export function createOpenAIProvider(opts: OpenAIOptions): Provider {
         TranslateResponseSchema,
         "translate",
         batch.tier,
+        batch.modelOverride,
       );
       return { translations: value.translations, model, tokensIn, tokensOut };
     },

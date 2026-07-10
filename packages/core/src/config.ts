@@ -37,6 +37,8 @@ export const ProviderConfigSchema = z.object({
       judge: z.string().optional(),
     })
     .optional(),
+  /** Fine-tuned model id per target locale (spec §13). Overrides tier routing. */
+  fineTuned: z.record(z.string(), z.string()).optional(),
 });
 
 export const QualitySchema = z.object({

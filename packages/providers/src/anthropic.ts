@@ -34,8 +34,8 @@ export function createAnthropicProvider(opts: AnthropicOptions): Provider {
   const doFetch = opts.fetchImpl ?? fetch;
   const models = { ...DEFAULTS, ...opts.models };
 
-  const chat: ChatFn = async (messages: ChatMessage, purpose, tier) => {
-    const model = purpose === "judge" ? models.judge : tier === "top" ? models.top : models.cheap;
+  const chat: ChatFn = async (messages: ChatMessage, purpose, tier, modelOverride) => {
+    const model = modelOverride ?? (purpose === "judge" ? models.judge : tier === "top" ? models.top : models.cheap);
     return withRetry(async () => {
       const resp = await doFetch(`${baseUrl}/v1/messages`, {
         method: "POST",
@@ -79,6 +79,7 @@ export function createAnthropicProvider(opts: AnthropicOptions): Provider {
         TranslateResponseSchema,
         "translate",
         batch.tier,
+        batch.modelOverride,
       );
       return { translations: value.translations, model, tokensIn, tokensOut };
     },

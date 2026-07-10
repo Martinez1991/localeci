@@ -4,7 +4,7 @@
  * Reference implementation — requires `drizzle-orm` at deploy time (see the
  * cloud README). Not part of the monorepo typecheck to keep CI light.
  */
-import { pgTable, text, timestamp, integer, bigint, pgEnum, uniqueIndex, index, vector } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, integer, bigint, jsonb, pgEnum, uniqueIndex, index, vector } from "drizzle-orm/pg-core";
 import { createId } from "@paralleldrive/cuid2";
 
 export const planEnum = pgEnum("plan", ["free", "pro", "team", "scale"]);
@@ -116,4 +116,27 @@ export const reviews = pgTable(
     createdAt: timestamp("created_at").notNull().defaultNow(),
   },
   (t) => ({ orgBatchIdx: index("reviews_org_batch_idx").on(t.orgId, t.batch, t.status) }),
+);
+
+export const jobStatusEnum = pgEnum("job_status", ["queued", "leased", "done", "failed"]);
+
+/** Persistent job queue for the translation proxy (spec §13). Workers claim
+ *  jobs with `FOR UPDATE SKIP LOCKED` and a lease-based visibility timeout. */
+export const jobs = pgTable(
+  "jobs",
+  {
+    id: text("id").primaryKey().$defaultFn(createId),
+    orgId: text("org_id").references(() => orgs.id),
+    kind: text("kind").notNull().default("translate"),
+    payload: jsonb("payload").notNull(),
+    status: jobStatusEnum("status").notNull().default("queued"),
+    attempts: integer("attempts").notNull().default(0),
+    maxAttempts: integer("max_attempts").notNull().default(4),
+    nextRunAt: timestamp("next_run_at").notNull().defaultNow(),
+    leaseUntil: timestamp("lease_until"),
+    error: text("error"),
+    result: jsonb("result"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (t) => ({ runnableIdx: index("jobs_runnable_idx").on(t.status, t.nextRunAt) }),
 );

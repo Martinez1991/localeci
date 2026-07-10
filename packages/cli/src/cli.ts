@@ -4,10 +4,11 @@ import { cmdInit } from "./commands/init.js";
 import { cmdTranslate } from "./commands/translate.js";
 import { cmdCheck } from "./commands/check.js";
 import { cmdStatus } from "./commands/status.js";
+import { cmdDataset } from "./commands/dataset.js";
 import { log, c } from "./lib/output.js";
-import { ConfigError } from "@localeci/core";
+import { ConfigError, type DatasetFormat } from "@localeci/core";
 
-const VERSION = "0.4.0";
+const VERSION = "0.5.0";
 
 const HELP = `${c.bold("localeci")} — ship your app in 30 languages, without leaving Git.
 
@@ -19,6 +20,7 @@ ${c.bold("Commands")}
   translate            Translate missing/changed strings to your target locales
   check                Validate without translating (CI mode; exits non-zero on problems)
   status               Show coverage per locale
+  dataset              Export a fine-tuning dataset (JSONL) from approved translations
 
 ${c.bold("Options")}
   --to <locales>       Comma-separated subset of target locales (translate/check)
@@ -27,6 +29,9 @@ ${c.bold("Options")}
   --json               translate/check: machine-readable JSON output
   --no-strict          check: don't fail on missing strings (only on broken/low-score)
   --force              init: overwrite an existing config
+  --format <fmt>       dataset: openai | plain (default openai)
+  --out <file>         dataset: output path (default localeci.dataset.jsonl)
+  --include-auto       dataset: include machine (non-human) translations
   --cwd <dir>          Run in a different directory
   -h, --help           Show this help
   -v, --version        Show version
@@ -57,6 +62,9 @@ export async function main(argv: string[]): Promise<number> {
       json: { type: "boolean" },
       strict: { type: "boolean", default: true },
       force: { type: "boolean" },
+      format: { type: "string" },
+      out: { type: "string" },
+      "include-auto": { type: "boolean" },
       cwd: { type: "string" },
       help: { type: "boolean", short: "h" },
       version: { type: "boolean", short: "v" },
@@ -86,6 +94,13 @@ export async function main(argv: string[]): Promise<number> {
         return await cmdCheck({ cwd, ...(to ? { to } : {}), strict: values.strict, json: values.json });
       case "status":
         return await cmdStatus({ cwd });
+      case "dataset":
+        return await cmdDataset({
+          cwd,
+          ...(values.format ? { format: values.format as DatasetFormat } : {}),
+          ...(values.out ? { out: values.out } : {}),
+          includeAuto: values["include-auto"],
+        });
       default:
         log.error(`Unknown command: ${command}`);
         log.info(HELP);

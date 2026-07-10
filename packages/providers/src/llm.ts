@@ -32,6 +32,7 @@ export type ChatFn = (
   messages: ChatMessage,
   purpose: "translate" | "judge",
   tier: "cheap" | "top",
+  modelOverride?: string,
 ) => Promise<{ text: string; tokensIn: number; tokensOut: number; model: string }>;
 
 /**
@@ -44,6 +45,7 @@ export async function callAndParse<T>(
   schema: z.ZodType<T>,
   purpose: "translate" | "judge",
   tier: "cheap" | "top",
+  modelOverride?: string,
 ): Promise<{ value: T; tokensIn: number; tokensOut: number; model: string }> {
   let tokensIn = 0;
   let tokensOut = 0;
@@ -58,7 +60,7 @@ export async function callAndParse<T>(
             system: messages.system,
             user: `${messages.user}\n\nYour previous response was invalid JSON: ${lastError}\nReturn ONLY valid JSON matching the schema.`,
           };
-    const res = await chat(msg, purpose, tier);
+    const res = await chat(msg, purpose, tier, modelOverride);
     tokensIn += res.tokensIn;
     tokensOut += res.tokensOut;
     model = res.model;

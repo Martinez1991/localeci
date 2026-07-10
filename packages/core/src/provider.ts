@@ -27,6 +27,8 @@ export interface TranslateBatch {
   tier: ModelTier;
   style: { tone: string; audience: string; notes: string };
   glossary: Array<{ term: string; target: string | null; neverTranslate: boolean }>;
+  /** Force a specific model (e.g. a fine-tuned one for this locale). Overrides tier. */
+  modelOverride?: string;
 }
 
 export interface TranslateOutputItem {
