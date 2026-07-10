@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { generateApiKey, hashKey, verifyKey, looksLikeApiKey, KEY_PREFIX } from "./apiKeys.js";
-import { PLANS, planFor, checkStringLimit, checkLocaleLimit } from "./plans.js";
+import { PLANS, planFor, planForPriceId, checkStringLimit, checkLocaleLimit } from "./plans.js";
 import { MemoryUsageStore, currentPeriod } from "./usage.js";
 import { handleTranslate, handleJudge, type AuthedOrg } from "./proxy.js";
 import { createMockProvider } from "@localeci/providers";
@@ -39,6 +39,12 @@ describe("plans & limits", () => {
   it("locale limit enforced", () => {
     expect(checkLocaleLimit(PLANS.free, 2).allowed).toBe(true);
     expect(checkLocaleLimit(PLANS.free, 3).allowed).toBe(false);
+  });
+  it("planForPriceId maps Stripe price ids consistently (checkout ↔ webhook)", () => {
+    const map = { pro: "price_pro", team: "price_team", scale: "price_scale" };
+    expect(planForPriceId("price_team", map)).toBe("team");
+    expect(planForPriceId("price_unknown", map)).toBe("free");
+    expect(planForPriceId(undefined, map)).toBe("free");
   });
 });
 

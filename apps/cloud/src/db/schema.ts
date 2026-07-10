@@ -111,6 +111,27 @@ export const orgMembers = pgTable(
   (t) => ({ orgUser: uniqueIndex("org_members_org_user_idx").on(t.orgId, t.userId) }),
 );
 
+export const inviteStatusEnum = pgEnum("invite_status", ["pending", "accepted", "revoked", "expired"]);
+
+/** Pending invitations to join an org (issue #14). */
+export const orgInvites = pgTable(
+  "org_invites",
+  {
+    id: text("id").primaryKey().$defaultFn(createId),
+    orgId: text("org_id")
+      .notNull()
+      .references(() => orgs.id),
+    email: text("email").notNull(),
+    role: roleEnum("role").notNull().default("member"),
+    token: text("token").notNull().unique(),
+    status: inviteStatusEnum("status").notNull().default("pending"),
+    invitedById: text("invited_by_id").references(() => users.id),
+    expiresAt: timestamp("expires_at").notNull(),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (t) => ({ orgEmailIdx: index("org_invites_org_email_idx").on(t.orgId, t.email) }),
+);
+
 export const reviewStatusEnum = pgEnum("review_status", ["pending", "approved", "edited", "rejected"]);
 
 /** Collaborative web review queue (spec: review workflow). One row per flagged

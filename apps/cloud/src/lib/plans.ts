@@ -57,6 +57,22 @@ export function planFor(id: string | null | undefined): Plan {
   return PLANS[(id as PlanId) ?? "free"] ?? PLANS.free;
 }
 
+/**
+ * Resolve a plan from a Stripe price id using the app's price→plan map (from
+ * env). Single source of truth so the checkout and the webhook agree. Falls
+ * back to free for unknown/absent prices.
+ */
+export function planForPriceId(
+  priceId: string | null | undefined,
+  priceMap: Partial<Record<PlanId, string | undefined>>,
+): PlanId {
+  if (!priceId) return "free";
+  for (const [plan, id] of Object.entries(priceMap)) {
+    if (id && id === priceId) return plan as PlanId;
+  }
+  return "free";
+}
+
 export interface LimitCheck {
   allowed: boolean;
   reason?: string;
