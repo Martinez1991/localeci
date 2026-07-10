@@ -8,6 +8,7 @@ import {
   coverage,
   validateTranslation,
   getParser,
+  checkStoreLimit,
   LockStore,
   resolveGlossaryForLocale,
   type Config,
@@ -147,7 +148,7 @@ export interface CheckIssue {
   file: string;
   locale: string;
   key: string;
-  kind: "missing" | "stale" | "broken" | "below-threshold";
+  kind: "missing" | "stale" | "broken" | "below-threshold" | "store-limit";
   message: string;
 }
 
@@ -208,6 +209,20 @@ export async function checkProject(opts: CheckOptions): Promise<CheckReport> {
         if (!validation.ok) {
           const msg = validation.issues.filter((i) => i.severity === "error").map((i) => i.message).join("; ");
           issues.push({ file, locale, key: t.key, kind: "broken", message: msg });
+        }
+      }
+
+      // App store field character limits (text format).
+      if (config.source.format === "text" && target[0]) {
+        const store = checkStoreLimit(targetPath, target[0].value);
+        if (store && !store.ok) {
+          issues.push({
+            file,
+            locale,
+            key: target[0].key,
+            kind: "store-limit",
+            message: `${store.length} chars exceeds the ${store.limit}-char store limit by ${store.over}`,
+          });
         }
       }
 

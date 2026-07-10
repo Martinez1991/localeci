@@ -10,6 +10,10 @@ export * from "./diff.js";
 export * from "./provider.js";
 export * from "./pipeline/index.js";
 export { estimateCost, rateForModel } from "./pricing.js";
+export { storeFieldLimit, checkStoreLimit } from "./storeMetadata.js";
+export type { StoreLimitCheck } from "./storeMetadata.js";
+export { MemorySemanticMemory } from "./semantic.js";
+export type { SemanticMemory, SemanticEntry, SemanticMatch } from "./semantic.js";
 
 // Parsers
 export {
@@ -24,6 +28,7 @@ export {
   androidParser,
   fluentParser,
   markdownParser,
+  textParser,
   flatten,
   unflatten,
   splitKey,

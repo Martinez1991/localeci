@@ -1,6 +1,6 @@
 {
   "name": "localeci",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Ship your app in 30 languages, without leaving Git. LLM i18n translation with a per-string quality score.",
   "license": "FSL-1.1-Apache-2.0",
   "type": "module",

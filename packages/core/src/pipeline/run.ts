@@ -18,6 +18,7 @@ import { batchItems, withConcurrency } from "./batch.js";
 import { decide, type Decision } from "./score.js";
 import { tokenSimilarity, cosineSimilarity } from "./similarity.js";
 import { estimateCost } from "../pricing.js";
+import type { SemanticMemory, SemanticEntry } from "../semantic.js";
 
 export interface PerStringResult {
   key: string;
@@ -59,12 +60,18 @@ export interface RunLocaleParams {
   today: string; // YYYY-MM-DD, injected for determinism
   /** Override config.quality.paranoid (back-translation cross-check). */
   paranoid?: boolean;
+  /** Optional semantic translation memory for cross-namespace few-shot (spec §13). */
+  semanticMemory?: SemanticMemory;
 }
 
 const CONCURRENCY = 4;
 
 export async function runLocale(params: RunLocaleParams): Promise<LocaleRunResult> {
-  const { sourceLocale, targetLocale, source, target, lock, provider, config, glossary, codeContext, today } = params;
+  const { sourceLocale, targetLocale, source, target, lock, provider, config, glossary, codeContext, today, semanticMemory } = params;
+
+  let tokensIn = 0;
+  let tokensOut = 0;
+  let costUsd = 0;
 
   const diff = diffLocale({ sourceLocale, targetLocale, source, target, lock });
   const targetMap = new Map(target.map((e) => [e.key, e.value]));
@@ -96,6 +103,31 @@ export async function runLocale(params: RunLocaleParams): Promise<LocaleRunResul
     }
   }
 
+  // Semantic TM (optional): embed the strings to translate and pull the nearest
+  // approved translations as few-shot examples, even across namespaces.
+  const semanticExamplesByKey = new Map<string, Array<{ source: string; target: string }>>();
+  const todoVectors = new Map<string, number[]>();
+  if (semanticMemory && provider.embed && todo.length) {
+    try {
+      const emb = await provider.embed(todo.map((d) => d.source));
+      costUsd += estimateCost({ model: emb.model, tokensIn: emb.tokens, tokensOut: 0 });
+      for (let i = 0; i < todo.length; i++) {
+        const vec = emb.vectors[i];
+        if (!vec) continue;
+        todoVectors.set(todo[i]!.key, vec);
+        const matches = await semanticMemory.query(vec, targetLocale, 3);
+        if (matches.length) {
+          semanticExamplesByKey.set(
+            todo[i]!.key,
+            matches.map((m) => ({ source: m.source, target: m.target })),
+          );
+        }
+      }
+    } catch {
+      // Semantic lookup is best-effort; fall back to namespace examples.
+    }
+  }
+
   // Prepare translate items with context + tier.
   interface Prepared extends TranslateItem {
     key: string;
@@ -110,9 +142,15 @@ export async function runLocale(params: RunLocaleParams): Promise<LocaleRunResul
     if (ctx.summary) item.context = ctx.summary;
     if (ctx.neighbors.length) item.neighbors = ctx.neighbors;
     if (isIcu) item.isIcu = true;
-    const examples = (humanExamplesByNs.get(namespaceOf(d.key)) ?? [])
-      .filter((e) => e.source !== d.source)
-      .slice(0, 3);
+    // Merge semantic + namespace examples, dedupe by target, cap at 3.
+    const merged: Array<{ source: string; target: string }> = [];
+    const seenTargets = new Set<string>();
+    for (const e of [...(semanticExamplesByKey.get(d.key) ?? []), ...(humanExamplesByNs.get(namespaceOf(d.key)) ?? [])]) {
+      if (e.source === d.source || seenTargets.has(e.target)) continue;
+      seenTargets.add(e.target);
+      merged.push(e);
+    }
+    const examples = merged.slice(0, 3);
     if (examples.length) item.examples = examples;
     return item;
   });
@@ -121,9 +159,6 @@ export async function runLocale(params: RunLocaleParams): Promise<LocaleRunResul
 
   // Translate all batches with bounded concurrency.
   const translationMap = new Map<string, string>();
-  let tokensIn = 0;
-  let tokensOut = 0;
-  let costUsd = 0;
   const modelByKey = new Map<string, string>();
 
   await withConcurrency(batches, CONCURRENCY, async (batch) => {
@@ -252,6 +287,7 @@ export async function runLocale(params: RunLocaleParams): Promise<LocaleRunResul
   // Decide + assemble results.
   const results: PerStringResult[] = [];
   const finalTargetMap = new Map(targetMap);
+  const semanticAdditions: SemanticEntry[] = [];
 
   for (const v of validated) {
     const prep = prepared.find((p) => p.id === v.key)!;
@@ -294,6 +330,17 @@ export async function runLocale(params: RunLocaleParams): Promise<LocaleRunResul
         approvedBy: "auto",
         translatedAt: today,
       });
+      const vec = todoVectors.get(v.key);
+      if (semanticMemory && vec) semanticAdditions.push({ source: v.source, target: v.target, locale: targetLocale, vector: vec });
+    }
+  }
+
+  // Grow the semantic memory with what we just wrote (best-effort).
+  if (semanticMemory && semanticAdditions.length) {
+    try {
+      await semanticMemory.add(semanticAdditions);
+    } catch {
+      /* non-fatal */
     }
   }
 

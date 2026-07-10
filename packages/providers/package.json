@@ -1,6 +1,6 @@
 {
   "name": "@localeci/providers",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "LocaleCI LLM provider adapters (anthropic, openai, mock, cloud)",
   "license": "FSL-1.1-Apache-2.0",
   "repository": {

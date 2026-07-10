@@ -7,6 +7,7 @@
  */
 import { readFileSync } from "node:fs";
 import { glob } from "tinyglobby";
+import { tryScanAst } from "./astContext.js";
 
 // Match the common i18n call/attribute shapes across React, Vue, and Svelte:
 //   t('key') / $t('key') / i18n.t(`key`)         (react-i18next, vue-i18n)
@@ -34,6 +35,22 @@ export interface CodeContextOptions {
   cwd: string;
   include: string[];
   maxFiles?: number;
+  /** Prefer the TypeScript-AST scanner when available (default true). */
+  ast?: boolean;
+}
+
+/**
+ * Best-available context scan: precise AST for JS/TS/JSX/TSX (when TypeScript is
+ * installed) merged with the grep scanner (which also covers .vue/.svelte). AST
+ * results take precedence; grep fills any gaps.
+ */
+export async function scanContext(opts: CodeContextOptions): Promise<Map<string, string>> {
+  const grep = await scanCodeContext(opts);
+  if (opts.ast === false) return grep;
+  const ast = await tryScanAst(opts).catch(() => null);
+  if (!ast || ast.size === 0) return grep;
+  for (const [k, v] of grep) if (!ast.has(k)) ast.set(k, v);
+  return ast;
 }
 
 /** Returns a map of i18n key → short context summary. */

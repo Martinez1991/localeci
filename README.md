@@ -82,8 +82,9 @@ The honest answer to "can you trust AI translation?" is: **sometimes, and you sh
 | Android `strings.xml` | Android | `<string>`, `<plurals>` (via ICU), `translatable="false"`/arrays passthrough; `values/` → `values-pt-rBR/` |
 | Fluent `.ftl` | Project Fluent | simple messages translated; selectors/attributes preserved verbatim |
 | Markdown / MDX | docs | prose translated; frontmatter, code fences, JSX, tables preserved verbatim; exact structure round-trip |
+| Plain text `.txt` | app store metadata | whole file = one string; Fastlane layout; App Store / Play **character limits** enforced by `check` |
 
-Code-context scanning understands React, **Vue** (`$t`, `<i18n-t keypath>`, `v-t`) and **Svelte** (`$_`, `$t`) call sites, so translations get the component context regardless of framework.
+Code-context scanning understands React, **Vue** (`$t`, `<i18n-t keypath>`, `v-t`) and **Svelte** (`$_`, `$t`) call sites. When TypeScript is installed it uses a **real AST** — knowing the exact enclosing JSX element and attribute (a `t('key')` inside `<button>` is a button label even across lines) — and falls back to grep otherwise (`context.ast`).
 
 ICU MessageFormat is translated **branch-by-branch** and recomposed, with CLDR plural categories enforced per target language (Polish needs `few`, Japanese only `other`).
 

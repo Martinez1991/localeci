@@ -48,3 +48,11 @@ pnpm dev
   translation fits its element (button/nav/title/…) and flags overflow. Exposed
   at `POST /api/v1/preview` and rendered at `/dashboard/preview`. Pure logic is
   unit-tested; the page is a reference renderer.
+- **Semantic translation memory** (pgvector): `src/server/semanticMemory.ts`
+  implements the core `SemanticMemory` interface against Postgres + pgvector,
+  suggesting the nearest approved translations as few-shot examples across
+  namespaces. Needs `CREATE EXTENSION vector;`.
+- **Collaborative web review**: `src/lib/review.ts` (pure, unit-tested) drives
+  approve/edit/reject with the same deterministic validation the pipeline uses;
+  approvals feed the semantic TM. `POST /api/v1/reviews/:id` and
+  `/dashboard/reviews` are reference wrappers.

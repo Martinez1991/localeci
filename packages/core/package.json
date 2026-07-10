@@ -1,6 +1,6 @@
 {
   "name": "@localeci/core",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "LocaleCI engine: parsers, diff, translation memory, validators, scoring",
   "license": "FSL-1.1-Apache-2.0",
   "repository": {

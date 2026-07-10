@@ -18,7 +18,8 @@ export type FormatId =
   | "strings" // iOS Localizable.strings
   | "android" // Android strings.xml
   | "fluent" // Project Fluent (.ftl)
-  | "markdown"; // Markdown / MDX docs
+  | "markdown" // Markdown / MDX docs
+  | "text"; // plain text file (app store metadata)
 
 /**
  * Per-entry metadata a parser can attach and a serializer must be able to
