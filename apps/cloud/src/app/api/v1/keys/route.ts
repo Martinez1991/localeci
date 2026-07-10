@@ -11,12 +11,15 @@ import { generateApiKey } from "../../../../lib/apiKeys.js";
 import { requireOrgAccess, ForbiddenError, UnauthorizedError } from "../../../../lib/authz.js";
 import { DbMembershipStore } from "../../../../server/membership.js";
 import { audit } from "../../../../server/audit.js";
+import { enforceRateLimit } from "../../../../server/guard.js";
 
 export const runtime = "nodejs";
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
   const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const limited = await enforceRateLimit(req, "write", { subjectId: session.user.id });
+  if (limited) return limited;
 
   // Target org: explicit orgId, else the caller's owned org (back-compat).
   const body = (await req.json().catch(() => ({}))) as { orgId?: string };

@@ -4,6 +4,7 @@ import { bearerFrom, resolveOrg } from "../../../../server/authKey.js";
 import { handleJudge } from "../../../../lib/proxy.js";
 import { platformProvider } from "../../../../lib/platformProvider.js";
 import { DbUsageStore } from "../../../../server/dbUsage.js";
+import { enforceRateLimit } from "../../../../server/guard.js";
 
 export const runtime = "nodejs";
 
@@ -12,6 +13,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   if (!secret) return NextResponse.json({ error: "Missing API key" }, { status: 401 });
   const org = await resolveOrg(secret);
   if (!org) return NextResponse.json({ error: "Invalid or revoked API key" }, { status: 401 });
+  const limited = await enforceRateLimit(req, "translate", { subjectId: org.orgId });
+  if (limited) return limited;
 
   const batch = await req.json();
   const result = await handleJudge(batch, {

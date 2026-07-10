@@ -141,6 +141,10 @@ Adding a new framework/format is a well-paved path — see [CONTRIBUTING.md](./C
 
 See [docs/security.md](./docs/security.md). TL;DR: BYO-key mode never sends strings anywhere but your provider; cloud mode is zero-retention by default.
 
+## Deploying the cloud
+
+Step-by-step runbook: [docs/deploy.md](./docs/deploy.md) (Vercel + Neon + Upstash + Sentry + Stripe + GitHub OAuth, env vars, migrations, crons).
+
 ## License
 
 Engine & tooling: **FSL-1.1** (free for everything except competing hosted services; converts to Apache 2.0 after 2 years). Cloud: commercial.

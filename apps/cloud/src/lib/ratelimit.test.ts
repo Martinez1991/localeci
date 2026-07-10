@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { InMemoryRateLimiter, clientIp } from "./ratelimit.js";
+import { InMemoryRateLimiter, clientIp, rateGuard, RATE_DEFAULTS } from "./ratelimit.js";
 import { checkBudget, MemorySpendStore, dailyKey } from "./budget.js";
 
 describe("InMemoryRateLimiter", () => {
@@ -32,6 +32,27 @@ describe("clientIp", () => {
   it("prefers the first x-forwarded-for entry", () => {
     const h = new Headers({ "x-forwarded-for": "9.9.9.9, 10.0.0.1" });
     expect(clientIp(h)).toBe("9.9.9.9");
+  });
+});
+
+describe("rateGuard", () => {
+  it("allows under the limit with ratelimit headers", async () => {
+    const rl = new InMemoryRateLimiter();
+    const d = await rateGuard({ limiter: rl, key: "k", limit: 2, now: 1000 });
+    expect(d.ok).toBe(true);
+    expect(d.status).toBe(200);
+    expect(d.headers["x-ratelimit-remaining"]).toBe("1");
+  });
+  it("returns 429 + retry-after when exceeded", async () => {
+    const rl = new InMemoryRateLimiter();
+    await rateGuard({ limiter: rl, key: "k", limit: 1, now: 1000 });
+    const d = await rateGuard({ limiter: rl, key: "k", limit: 1, now: 1000 });
+    expect(d.ok).toBe(false);
+    expect(d.status).toBe(429);
+    expect(Number(d.headers["retry-after"])).toBeGreaterThan(0);
+  });
+  it("exposes per-route-class defaults", () => {
+    expect(RATE_DEFAULTS.public).toBeLessThan(RATE_DEFAULTS.translate);
   });
 });
 
