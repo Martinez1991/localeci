@@ -1,4 +1,14 @@
-# Security & data handling
+# 12. Segurança — Data handling & Threat models
+
+> 📚 [Índice da documentação](./index.md)
+>
+> Este documento tem duas partes: (A) **manuseio de dados & defesas
+> operacionais** (referência de 1 página, mantida em inglês) e (B) **threat
+> models & mapeamento de compliance** (OWASP/STRIDE/DREAD/LINDDUN).
+
+---
+
+## Parte A — Data handling & defenses
 
 _One page, on purpose. Last reviewed: 2026-07._
 
@@ -75,3 +85,62 @@ never written to disk or logs.
 
 Email security@localeci.dev. Please do not open a public issue for security
 reports.
+
+---
+
+## Parte B — Threat models & compliance mapping
+
+### B.1 OWASP Top 10 (2021) — estado atual
+| # | Categoria | Status | Evidência |
+|---|---|---|---|
+| A01 Broken Access Control | ✅ Mitigado | `requireOrgAccess` deny-by-default + RBAC em todas as rotas |
+| A02 Cryptographic Failures | ✅/🟡 | scrypt async (argon2id recomendado); TLS gerenciado; redaction em logs |
+| A03 Injection | ✅ | Drizzle parametrizado; prompt-injection tratado como dado |
+| A04 Insecure Design | ✅ | playground com rate limit + budget cap; threat model (STRIDE) |
+| A05 Security Misconfiguration | ✅ | CSP/HSTS/X-Frame/nosniff via middleware |
+| A06 Vulnerable Components | ✅ | Dependabot + `pnpm audit` gate (undici corrigido) + SBOM |
+| A07 Auth Failures | ✅/🟡 | GitHub OAuth + MFA TOTP; rate limit em auth; sem senha própria |
+| A08 Integrity Failures | ✅ | npm provenance; audit log hash-chained; SBOM |
+| A09 Logging Failures | ✅ | logger estruturado + Sentry + alertas de custo |
+| A10 SSRF | ✅ | sem fetch de URL do usuário |
+
+### B.2 OWASP API Top 10 (destaques)
+API1 BOLA ✅ (org check); API2 Broken Auth ✅ (Bearer+session+MFA); API4 Resource
+Consumption ✅ (rate limit + budget cap + cota de plano); API5 BFLA ✅ (RBAC
+roles); API8 Misconfig ✅ (headers).
+
+> **OWASP LLM Top 10** e mitigações de IA: ver [ai.md](./ai.md).
+
+### B.3 STRIDE
+| Ameaça | Vetor | Mitigação |
+|---|---|---|
+| **S**poofing | Roubo de API key | hash argon2/scrypt, prefix, revogável, timing-safe |
+| **T**ampering | Editar audit log | hash-chain + `verifyChain` + (trigger opcional) |
+| **R**epudiation | Negar ação | audit log imutável por ator |
+| **I**nfo Disclosure | Vazar strings/PII | zero-retention, redaction, DSAR |
+| **D**oS | Abuso do playground | rate limit + circuit breaker de custo |
+| **E**levation | Acesso cross-org | deny-by-default + RBAC + last-owner protection |
+
+### B.4 DREAD (top riscos priorizados)
+| Risco | D | R | E | A | D | Score | Severidade |
+|---|---|---|---|---|---|---|---|
+| Financial-exhaustion (playground) | 8 | 7 | 9 | 8 | 6 | 7.6 | Alta → **mitigado** |
+| BOLA cross-org | 9 | 6 | 7 | 9 | 5 | 7.2 | Alta → **mitigado** |
+| Vazamento de PII em strings | 8 | 4 | 5 | 8 | 6 | 6.2 | Média (zero-retention) |
+| Prompt injection | 6 | 5 | 4 | 6 | 5 | 5.2 | Média (dado-only + validador) |
+
+### B.5 LINDDUN (privacidade)
+Linkability/Identifiability ⇒ pseudonimização (audit actor); Non-repudiation ⇒
+audit; Detectability ⇒ minimização; **D**isclosure ⇒ zero-retention/redaction;
+Unawareness ⇒ política de privacidade + DSAR; Non-compliance ⇒ retenção +
+base legal.
+
+### B.6 Frameworks & Ferramentas
+NIST CSF (Identify/Protect/Detect/Respond/Recover) parcialmente coberto; CIS
+Controls (inventário deps/SBOM, MFA, log); ISO 27001 controles A.9/A.12/A.14.
+**Ferramentas:** CodeQL (SAST), gitleaks (secrets), `pnpm audit`/Snyk (SCA),
+CycloneDX (SBOM), OWASP ZAP (DAST — recomendado), Trivy (container/IaC — quando
+houver IaC).
+
+---
+[← DevOps](./devops.md) · [Índice](./index.md) · [IA →](./ai.md)

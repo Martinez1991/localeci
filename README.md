@@ -123,7 +123,7 @@ The CLI is open source and runs anywhere — your machine, your CI — with your
 
 ## Documentation
 
-Enterprise engineering docs: [docs/PROJECT-DOCUMENTATION.md](./docs/PROJECT-DOCUMENTATION.md) (vision, functional/NFR requirements, architecture + Mermaid, data model, APIs, security threat models, AI/LLM Top 10, testing, roadmap, backlog, risks, costs, checklists) · API contract: [docs/openapi.yaml](./docs/openapi.yaml) · [Security](./docs/security.md) · [Deploy](./docs/deploy.md).
+Enterprise engineering docs (split by area): **[docs/index.md](./docs/index.md)** — [architecture](./docs/architecture.md), [data model](./docs/data-model.md), [APIs](./docs/api.md), [security threat models](./docs/security.md), [AI/LLM Top 10](./docs/ai.md), [testing](./docs/testing.md), [roadmap](./docs/roadmap.md), [risks](./docs/risks.md), [costs](./docs/costs.md), [checklists](./docs/checklists.md), … · API contract: [docs/openapi.yaml](./docs/openapi.yaml) · [Deploy](./docs/deploy.md).
 
 ## Repository layout
 
