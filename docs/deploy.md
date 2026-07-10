@@ -45,13 +45,20 @@ pnpm db:migrate
 
 ## 3. Wire the production sinks (closes #9, #11, #18)
 
-- **Observability (#9):** `SENTRY_DSN` + `@sentry/nextjs` (`sentry.server.config.ts`).
-  The structured logger (`src/lib/observability.ts`) already redacts content; pipe
-  its JSON to Vercel/Datadog. Set an alert on the `quotaAlert` / cost log fields.
-- **Rate limiting KV (#11):** implement a `RateLimiter` over `@upstash/ratelimit`
-  and swap it into `src/server/guard.ts` (the in-memory limiter is the fallback).
-- **Hot TM cache (#18):** swap `InMemoryLru` for `KvCache(new Redis(...))` in
-  `src/lib/platformProvider.ts`. Point dashboard reads at `DATABASE_URL_REPLICA`.
+The adapters are already written and unit-tested — you only plug credentials:
+
+- **Observability (#9):** `sentry.server.config.ts`, `sentry.edge.config.ts`, and
+  `src/instrumentation.ts` are provided. In `src/server/guard.ts`, build the
+  logger with the Sentry sink:
+  `createLogger(ctx, sentrySink(Sentry))` (from `src/lib/logSink.ts`, tested).
+  Errors/warns forward to Sentry; all lines emit redacted JSON. Set an alert on
+  the `quotaAlert` field.
+- **Rate limiting KV (#11):** import `kvRateLimiter` from `src/server/redis.ts`
+  (an `@upstash/redis`-backed `KvRateLimiter`, tested) and use it in
+  `src/server/guard.ts` in place of the in-memory `limiter`.
+- **Hot TM cache (#18):** in `src/lib/platformProvider.ts`, replace the
+  `InMemoryLru` with `kvCache` from `src/server/redis.ts`. Point dashboard/usage
+  reads at the read replica via `dbRead` (`src/db/replica.ts`).
 
 ## 4. Typecheck the routes (closes #12)
 
