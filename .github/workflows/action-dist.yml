@@ -1,0 +1,49 @@
+name: Action dist
+
+# The GitHub Action ships a committed bundle (packages/action/dist). Bundles are
+# not byte-reproducible across OSes, so instead of a fragile byte-exact gate, CI
+# is the authority: rebuild on Linux and commit the result back if it changed.
+# Self-stabilizes (the next run finds no diff and exits).
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "packages/action/**"
+      - "packages/cli/**"
+      - "packages/core/**"
+      - "packages/providers/**"
+      - "pnpm-lock.yaml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: action-dist
+  cancel-in-progress: false
+
+jobs:
+  rebuild:
+    runs-on: ubuntu-latest
+    # Avoid looping on our own bot commit.
+    if: github.actor != 'github-actions[bot]'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @localeci/action build
+      - name: Commit rebuilt dist if changed
+        run: |
+          if git diff --quiet -- packages/action/dist; then
+            echo "action dist already up to date."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add packages/action/dist
+          git commit -m "chore(action): rebuild dist on CI [skip ci]"
+          git push
