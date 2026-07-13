@@ -1,0 +1,15 @@
+node_modules
+**/node_modules
+**/dist
+!packages/action/dist
+.git
+.github
+.turbo
+coverage
+*.log
+.env
+.env.local
+apps/cloud
+examples
+load
+docs

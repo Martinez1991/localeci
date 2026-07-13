@@ -31,7 +31,7 @@ flowchart LR
 ```
 
 ## Variáveis de ambiente
-Consolidadas em [`apps/cloud/.env.production.example`](../apps/cloud/.env.production.example)
+Consolidadas em [`apps/cloud/.env.production.example`](https://github.com/localeci/localeci/blob/main/apps/cloud/.env.production.example)
 (app, DB primário/replica, Auth GitHub, chaves LLM, KV, Sentry, guardrails de
 rate/budget, WORKER_SECRET, Stripe, Resend).
 
