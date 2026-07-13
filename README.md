@@ -42,15 +42,24 @@ No API key handy? Try the whole pipeline offline with the deterministic mock pro
 npx localeci translate --mock
 ```
 
+Or run it as a **Docker image** (no Node install needed):
+
+```bash
+docker run --rm -v "$PWD":/work ghcr.io/localeci/localeci translate --to de,ja --mock
+```
+
 Or add the GitHub Action and never think about it again:
 
 ```yaml
 # .github/workflows/localize.yml
-- uses: localeci/localeci/packages/action@v1
+- uses: localeci/localeci@v1            # or …/packages/action@v1
   with:
     locales: pt-BR, de, ja, es
     api-key: ${{ secrets.LOCALECI_KEY }}   # or bring your own LLM key
 ```
+
+> Docs site (GitHub Pages), Docker image (GHCR), and Marketplace publishing:
+> see [docs/publishing.md](./docs/publishing.md).
 
 Every PR that touches strings gets translation commits + a single quality-report comment.
 

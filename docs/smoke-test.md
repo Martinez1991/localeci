@@ -1,7 +1,7 @@
 # Post-deploy smoke test
 
 After `vercel --prod`, verify the deployment end to end with
-[`scripts/smoke.sh`](../scripts/smoke.sh). It asserts status codes only — no
+[`scripts/smoke.sh`](https://github.com/localeci/localeci/blob/main/scripts/smoke.sh). It asserts status codes only — no
 secrets or client content are printed.
 
 ```bash

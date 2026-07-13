@@ -1,0 +1,70 @@
+site_name: LocaleCI Docs
+site_description: Git-native i18n translation with a per-string quality score — engineering documentation.
+site_url: https://localeci.github.io/localeci/
+repo_url: https://github.com/localeci/localeci
+repo_name: localeci/localeci
+docs_dir: docs
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  language: pt
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: deep purple
+      toggle: { icon: material/weather-night, name: Modo escuro }
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: deep purple
+      toggle: { icon: material/weather-sunny, name: Modo claro }
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.top
+    - navigation.sections
+    - content.code.copy
+    - search.suggest
+
+markdown_extensions:
+  - admonition
+  - toc: { permalink: true }
+  - tables
+  - pymdownx.highlight
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+
+nav:
+  - Início: index.md
+  - Visão Geral: overview.md
+  - Requisitos: requirements.md
+  - Arquitetura: architecture.md
+  - Modelo de Dados: data-model.md
+  - APIs: api.md
+  - Front-end: frontend.md
+  - Backend: backend.md
+  - Infraestrutura: infrastructure.md
+  - DevOps: devops.md
+  - Segurança: security.md
+  - IA: ai.md
+  - Observabilidade: observability.md
+  - Testes: testing.md
+  - Roadmap & Backlog: roadmap.md
+  - Riscos: risks.md
+  - Custos: costs.md
+  - Melhorias: improvements.md
+  - Premissas & Lacunas: assumptions.md
+  - Checklists: checklists.md
+  - Operacional:
+      - Deploy: deploy.md
+      - Smoke test: smoke-test.md
+      - Publicação (Pages/Docker/Marketplace): publishing.md
+      - Non-goals: non-goals.md
+
+plugins:
+  - search

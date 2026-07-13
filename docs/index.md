@@ -29,6 +29,6 @@ português. **Fonte da verdade: o código.**
 | 22 | [Checklists](./checklists.md) | Dev, QA, segurança, deploy, produção |
 
 ## Docs operacionais relacionados
-- [Deploy runbook](./deploy.md) · [Smoke test](./smoke-test.md) · [Golden set](../golden/README.md)
+- [Deploy runbook](./deploy.md) · [Smoke test](./smoke-test.md) · [Publicação (Pages/Docker/Marketplace)](./publishing.md) · [Golden set](https://github.com/localeci/localeci/blob/main/golden/README.md)
 
 > O documento consolidado de página única foi dividido nestes arquivos por área.
