@@ -9,6 +9,7 @@ An open-source CLI + GitHub Action that translates your i18n files with LLMs on 
 [![npm](https://img.shields.io/npm/v/localeci)](https://www.npmjs.com/package/localeci)
 [![License: FSL-1.1](https://img.shields.io/badge/license-FSL--1.1-blue)](./LICENSE)
 [![CI](https://github.com/localeci/localeci/actions/workflows/ci.yml/badge.svg)](https://github.com/localeci/localeci/actions)
+[![Docs](https://img.shields.io/badge/docs-mkdocs-blue)](https://martinez1991.github.io/localeci/)
 
 [Quickstart](#quickstart) · [How it works](#how-it-works) · [Quality scores](#quality-scores) · [Config](#configuration) · [Contributing](./CONTRIBUTING.md)
 
