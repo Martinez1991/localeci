@@ -35,7 +35,7 @@
   },
   "dependencies": {
     "@formatjs/icu-messageformat-parser": "^2.9.8",
-    "make-plural": "^7.4.0",
+    "make-plural": "^8.1.0",
     "yaml": "^2.6.1",
     "zod": "^3.24.1"
   },
