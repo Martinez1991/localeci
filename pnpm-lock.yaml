@@ -120,8 +120,8 @@ importers:
         specifier: ^2.9.8
         version: 2.11.4
       make-plural:
-        specifier: ^7.4.0
-        version: 7.5.0
+        specifier: ^8.1.0
+        version: 8.1.0
       yaml:
         specifier: ^2.6.1
         version: 2.9.0
@@ -806,8 +806,8 @@ packages:
   magic-string@0.30.21:
     resolution: {integrity: sha512-vd2F4YUyEXKGcLHoq+TEyCjxueSeHnFxyyjNp80yg0XV4vUhnDer/lvvlqM/arB5bXQN5K2/3oinyCRyx8T2CQ==}
 
-  make-plural@7.5.0:
-    resolution: {integrity: sha512-0booA+aVYyVFoR67JBHdfVk0U08HmrBH2FrtmBqBa+NldlqXv/G2Z9VQuQq6Wgp2jDWdybEWGfBkk1cq5264WA==}
+  make-plural@8.1.0:
+    resolution: {integrity: sha512-p8EfQ2LFxnU4KGc82hOYdUplQw0eoWJLzJVKyv2GR9sd4zkjA8bLSXLEmp/qE08c/cFTZOK8j6Ex80+Wey+4PA==}
 
   mlly@1.8.2:
     resolution: {integrity: sha512-d+ObxMQFmbt10sretNDytwt85VrbkhhUA/JBGm1MPaWJ65Cl4wOgLaB1NYvJSZ0Ef03MMEU/0xpPMXUIQ29UfA==}
@@ -1538,7 +1538,7 @@ snapshots:
     dependencies:
       '@jridgewell/sourcemap-codec': 1.5.5
 
-  make-plural@7.5.0: {}
+  make-plural@8.1.0: {}
 
   mlly@1.8.2:
     dependencies:
