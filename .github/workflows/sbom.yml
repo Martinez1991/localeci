@@ -22,7 +22,7 @@ jobs:
       - name: Generate CycloneDX SBOM
         run: npx -y @cyclonedx/cdxgen@latest -t pnpm -o sbom.cdx.json --spec-version 1.5
       - name: Upload SBOM artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: sbom
           path: sbom.cdx.json
