@@ -22,8 +22,8 @@
   },
   "//deployDependencies": "Install these when deploying the cloud (kept out of the monorepo install to keep CI light): next@^15 react@^19 react-dom@^19 drizzle-orm@^0.38 drizzle-kit @auth/core next-auth@^5 stripe@^17 resend@^4 @neondatabase/serverless",
   "devDependencies": {
-    "@types/node": "^22.10.0",
-    "typescript": "^5.7.2",
-    "vitest": "^2.1.8"
+    "@types/node": "^26.1.1",
+    "typescript": "^7.0.2",
+    "vitest": "^4.1.10"
   }
 }
