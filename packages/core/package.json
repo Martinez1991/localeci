@@ -34,7 +34,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@formatjs/icu-messageformat-parser": "^2.9.8",
+    "@formatjs/icu-messageformat-parser": "^3.5.17",
     "make-plural": "^7.4.0",
     "yaml": "^2.6.1",
     "zod": "^3.24.1"
