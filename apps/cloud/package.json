@@ -18,7 +18,7 @@
   "dependencies": {
     "@localeci/core": "workspace:*",
     "@localeci/providers": "workspace:*",
-    "zod": "^3.24.1"
+    "zod": "^4.5.4"
   },
   "//deployDependencies": "Install these when deploying the cloud (kept out of the monorepo install to keep CI light): next@^15 react@^19 react-dom@^19 drizzle-orm@^0.38 drizzle-kit @auth/core next-auth@^5 stripe@^17 resend@^4 @neondatabase/serverless",
   "devDependencies": {
