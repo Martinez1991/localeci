@@ -5,7 +5,7 @@
   "description": "Sample next-intl app used in the LocaleCI demo GIF and e2e tests",
   "dependencies": {
     "next": "^15.0.0",
-    "next-intl": "^3.0.0",
+    "next-intl": "^4.14.2",
     "react": "^19.0.0"
   }
 }
