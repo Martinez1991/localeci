@@ -33,7 +33,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@formatjs/icu-messageformat-parser": "^2.9.8",
+    "@formatjs/icu-messageformat-parser": "^3.5.20",
     "@localeci/core": "workspace:*",
     "zod": "^3.24.1"
   },
